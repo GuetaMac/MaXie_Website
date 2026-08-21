@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body text-plum-600 bg-blush-50;
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(216, 90, 118, 0.08) 1px,
+      transparent 0
+    );
+    background-size: 22px 22px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-plum-700;
+  }
+
+  ::selection {
+    @apply bg-rose-200 text-plum-700;
+  }
+}
+
+@layer components {
+  /* Signature element: a soft "keepsake card" — rounded, gently tilted on hover,
+     like a little card tucked into a memory box. Used across feature cards. */
+  .keepsake-card {
+    @apply bg-white/80 border border-rose-100 rounded-3xl shadow-sm transition-all duration-200;
+  }
+
+  .keepsake-card:hover {
+    @apply shadow-md -translate-y-0.5 border-rose-200;
+  }
+
+  .page-eyebrow {
+    @apply inline-block text-xs tracking-[0.2em] uppercase text-rose-500 font-semibold mb-2;
+  }
+}
+
+@layer utilities {
+  /* Gentle idle bob for the penguin mascot — subtle, not distracting. */
+  @keyframes gentle-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  /* Playful wiggle triggered on click. */
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-8deg);
+    }
+    75% {
+      transform: rotate(8deg);
+    }
+  }
+
+  /* Soft entrance for the speech-bubble message. */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-gentle-bob {
+    animation: gentle-bob 3s ease-in-out infinite;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.2s ease-out;
+  }
+}
