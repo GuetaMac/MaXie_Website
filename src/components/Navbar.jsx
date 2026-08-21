@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useLock } from "./PasscodeGate.jsx";
 
 const links = [
   { to: "/", label: "Home" },
@@ -11,8 +12,27 @@ const links = [
   { to: "/songs", label: "Our Playlist" },
 ];
 
+function LockIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M9 12H3l3-3m-3 3l3 3" />
+      <path d="M21 12H9" />
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+    </svg>
+  );
+}
+
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const lock = useLock();
 
   const linkClasses = ({ isActive }) =>
     `px-3 py-2 rounded-full text-sm font-semibold transition-colors ${
@@ -43,6 +63,14 @@ function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+            <button
+              type="button"
+              onClick={lock}
+              className="ml-2 flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-400 transition-colors hover:bg-rose-50"
+            >
+              <LockIcon className="h-4 w-4" />
+              Sign out
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -69,6 +97,17 @@ function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                lock();
+              }}
+              className="mt-1 flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-2 text-left text-sm font-semibold text-rose-400 transition-colors hover:bg-rose-50"
+            >
+              <LockIcon className="h-4 w-4" />
+              Sign out
+            </button>
           </div>
         )}
       </nav>

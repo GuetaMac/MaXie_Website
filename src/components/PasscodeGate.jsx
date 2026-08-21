@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import PenguinMascot from "./PenguinMascot.jsx";
 
 /**
@@ -9,6 +9,14 @@ import PenguinMascot from "./PenguinMascot.jsx";
  * hangs out near the bottom, and the "passcode" is the date the two
  * of you became official (MM · DD · YYYY). Get it right and the
  * screen unlocks into the real site.
+ *
+ * Phases:
+ *   booting    -> brief animated-penguin splash while the app spins up
+ *   locked     -> the lockscreen with the code inputs
+ *   unlocking  -> animated-penguin celebration after a correct code
+ *   unlocked   -> renders children, wrapped in a context that exposes
+ *                 lock() so any child (e.g. a "sign out" button in the
+ *                 navbar) can send the visitor back to the lockscreen.
  *
  * Usage (wrap your whole app, e.g. in App.jsx):
  *
@@ -22,6 +30,12 @@ import PenguinMascot from "./PenguinMascot.jsx";
  *     );
  *   }
  *
+ * To add a sign-out button anywhere inside the app:
+ *
+ *   import { useLock } from "./components/PasscodeGate";
+ *   const lock = useLock();
+ *   <button onClick={lock}>Sign out</button>
+ *
  * Photo setup:
  *  1. Drop your photo into the `public` folder, e.g. public/lockscreen.jpg
  *  2. Pass it in: <PasscodeGate photoSrc="/lockscreen.jpg">
@@ -34,6 +48,88 @@ import PenguinMascot from "./PenguinMascot.jsx";
  *                (current default) so it asks every visit.
  *  - names       small caption near the bottom, e.g. "Macky & Trixie".
  */
+
+const LockContext = createContext(() => {});
+
+export function useLock() {
+  return useContext(LockContext);
+}
+
+function FloatingHearts({ count = 6 }) {
+  const hearts = Array.from({ length: count });
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+    >
+      {hearts.map((_, i) => (
+        <span
+          key={i}
+          className="absolute bottom-8 text-rose-200"
+          style={{
+            left: `${12 + ((i * 71) % 76)}%`,
+            fontSize: `${12 + (i % 3) * 6}px`,
+            animation: `float-heart ${2.6 + (i % 3) * 0.5}s ease-in infinite`,
+            animationDelay: `${i * 0.35}s`,
+          }}
+        >
+          ♥
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function PenguinLoadingScreen({ heading, sublabel }) {
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-plum-700 px-6 text-center">
+      <style>{`
+        @keyframes float-heart {
+          0% { transform: translateY(0) scale(0.7); opacity: 0; }
+          15% { opacity: 1; }
+          100% { transform: translateY(-160px) scale(1.1); opacity: 0; }
+        }
+        @keyframes bob {
+          0%, 100% { transform: translateY(0) rotate(-3deg); }
+          50% { transform: translateY(-12px) rotate(3deg); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      <FloatingHearts />
+
+      <div style={{ animation: "bob 1.6s ease-in-out infinite" }}>
+        <PenguinMascot
+          size={110}
+          wrapperClassName="relative"
+          bubbleSide="right"
+        />
+      </div>
+
+      <p
+        className="mt-6 font-display text-xl text-white"
+        style={{ animation: "fade-in 0.6s ease both", animationDelay: "0.2s" }}
+      >
+        {heading}
+      </p>
+      {sublabel && (
+        <p
+          className="mt-1 font-body text-sm text-white/70"
+          style={{
+            animation: "fade-in 0.6s ease both",
+            animationDelay: "0.35s",
+          }}
+        >
+          {sublabel}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function PasscodeGate({
   children,
   answer = "07302026",
@@ -41,19 +137,23 @@ function PasscodeGate({
   storageKey = null,
   names = "Macky & Trixie",
 }) {
-  const [unlocked, setUnlocked] = useState(false);
-  const [checkedStorage, setCheckedStorage] = useState(false);
+  const [phase, setPhase] = useState("booting"); // booting | locked | unlocking | unlocked
   const [digits, setDigits] = useState(Array(8).fill(""));
   const [status, setStatus] = useState("idle"); // idle | error | success
   const [now, setNow] = useState(new Date());
   const inputsRef = useRef([]);
 
+  // Brief boot splash, then land on the lockscreen (or straight through
+  // if a previous visit was remembered via storageKey).
   useEffect(() => {
-    if (storageKey && typeof window !== "undefined") {
-      const saved = window.localStorage.getItem(storageKey);
-      if (saved === "true") setUnlocked(true);
-    }
-    setCheckedStorage(true);
+    const alreadyUnlocked =
+      storageKey &&
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(storageKey) === "true";
+    const id = window.setTimeout(() => {
+      setPhase(alreadyUnlocked ? "unlocked" : "locked");
+    }, 1200);
+    return () => window.clearTimeout(id);
   }, [storageKey]);
 
   useEffect(() => {
@@ -104,12 +204,17 @@ function PasscodeGate({
     }
     if (code === answer) {
       setStatus("success");
+      // let the "that's the one" message show briefly, then hand off to
+      // the penguin celebration screen before revealing the site
       window.setTimeout(() => {
-        setUnlocked(true);
-        if (storageKey && typeof window !== "undefined") {
-          window.localStorage.setItem(storageKey, "true");
-        }
-      }, 900);
+        setPhase("unlocking");
+        window.setTimeout(() => {
+          setPhase("unlocked");
+          if (storageKey && typeof window !== "undefined") {
+            window.localStorage.setItem(storageKey, "true");
+          }
+        }, 1900);
+      }, 650);
     } else {
       setStatus("error");
       setDigits(Array(8).fill(""));
@@ -122,10 +227,36 @@ function PasscodeGate({
     attempt();
   };
 
-  // Avoid a flash of the locked screen while we check localStorage.
-  if (!checkedStorage) return null;
+  const lock = () => {
+    setPhase("locked");
+    setStatus("idle");
+    setDigits(Array(8).fill(""));
+    if (storageKey && typeof window !== "undefined") {
+      window.localStorage.removeItem(storageKey);
+    }
+  };
 
-  if (unlocked) return children;
+  if (phase === "booting") {
+    return (
+      <PenguinLoadingScreen
+        heading="Loading our little world..."
+        sublabel="One moment"
+      />
+    );
+  }
+
+  if (phase === "unlocking") {
+    return (
+      <PenguinLoadingScreen
+        heading="That's the date. Unlocking..."
+        sublabel={names}
+      />
+    );
+  }
+
+  if (phase === "unlocked") {
+    return <LockContext.Provider value={lock}>{children}</LockContext.Provider>;
+  }
 
   const time = now.toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -155,18 +286,11 @@ function PasscodeGate({
       <div className="absolute inset-0 bg-plum-700/10" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/45" />
 
-      <div
-        className={[
-          "relative z-10 flex min-h-screen flex-col items-center justify-start pt-14 sm:pt-20 px-6 py-10 text-center transition-all duration-700",
-          status === "success"
-            ? "opacity-0 scale-105"
-            : "opacity-100 scale-100",
-        ].join(" ")}
-      >
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-start px-6 py-10 pt-14 text-center sm:pt-20">
         {/* clock */}
         <div>
           <p
-            className="font-display text-6xl sm:text-7xl font-semibold tabular-nums text-white"
+            className="font-display text-6xl font-semibold tabular-nums text-white sm:text-7xl"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.45)" }}
           >
             {time}
@@ -188,8 +312,8 @@ function PasscodeGate({
           <span className="text-rose-200">♥</span>
         </div>
 
-        <div className="relative mt-10 w-full max-w-xs mx-auto">
-          <div className="pointer-events-none absolute right-full bottom-6 mr-3 hidden sm:block">
+        <div className="relative mx-auto mt-10 w-full max-w-xs">
+          <div className="pointer-events-none absolute bottom-6 right-full mr-3 hidden sm:block">
             <PenguinMascot
               size={92}
               wrapperClassName="relative pointer-events-auto"
@@ -201,18 +325,18 @@ function PasscodeGate({
             onSubmit={handleSubmit}
             className="w-full rounded-3xl border border-white/25 bg-white/15 px-6 py-6 backdrop-blur-sm"
           >
-            <p className="font-body text-[11px] uppercase tracking-[0.2em] text-white/80 font-semibold mb-3">
+            <p className="mb-3 font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
               Enter the date it all began
             </p>
 
             <div
-              className="flex items-center justify-center gap-1.5 mb-2"
+              className="mb-2 flex items-center justify-center gap-1.5"
               onPaste={handlePaste}
             >
               {digits.map((d, i) => (
                 <span key={i} className="flex items-center">
                   {(i === 2 || i === 4) && (
-                    <span className="mx-0.5 text-white/50 select-none">/</span>
+                    <span className="mx-0.5 select-none text-white/50">/</span>
                   )}
                   <input
                     ref={(el) => (inputsRef.current[i] = el)}
@@ -224,7 +348,7 @@ function PasscodeGate({
                     onKeyDown={(e) => handleKeyDown(i, e)}
                     aria-label={`digit ${i + 1}`}
                     className={[
-                      "h-10 w-7 rounded-lg border text-center font-display text-base text-white outline-none transition-colors bg-white/10",
+                      "h-10 w-7 rounded-lg border bg-white/10 text-center font-display text-base text-white outline-none transition-colors",
                       status === "error"
                         ? "border-rose-300 bg-rose-500/20"
                         : "border-white/30 focus:border-white/70",
@@ -234,31 +358,31 @@ function PasscodeGate({
               ))}
             </div>
 
-            <p className="font-body text-[10px] text-white/60 mb-4">
+            <p className="mb-4 font-body text-[10px] text-white/60">
               MM / DD / YYYY
             </p>
 
             {status === "error" && (
-              <p className="font-body text-xs text-rose-200 mb-3">
+              <p className="mb-3 font-body text-xs text-rose-200">
                 Hmm, that's not the date. Try again?
               </p>
             )}
             {status === "success" && (
-              <p className="font-body text-xs text-rose-100 mb-3">
+              <p className="mb-3 font-body text-xs text-rose-100">
                 That's the one. Unlocking…
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full rounded-full bg-white text-plum-700 text-sm font-body font-semibold py-3 transition-transform active:scale-95 hover:bg-white/90"
+              className="w-full rounded-full bg-white py-3 font-body text-sm font-semibold text-plum-700 transition-transform hover:bg-white/90 active:scale-95"
             >
               Unlock
             </button>
           </form>
         </div>
 
-        <p className="mt-6 mb-2 font-body text-[11px] text-white/50">
+        <p className="mb-2 mt-6 font-body text-[11px] text-white/50">
           Our Little World
         </p>
       </div>
