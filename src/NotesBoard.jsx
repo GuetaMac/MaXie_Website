@@ -11,9 +11,9 @@ import {
 import { useStreak, STREAK_USERS } from "./hooks/useStreak.js";
 
 const REACTIONS = [
-  { key: "heart", emoji: "❤️", label: "Mahal kita" },
-  { key: "smile", emoji: "😊", label: "Nakangiti ako" },
-  { key: "teary", emoji: "🥺", label: "Naiyak ako" },
+  { key: "heart", emoji: "❤️", label: "Love you" },
+  { key: "smile", emoji: "😊", label: "Smiling" },
+  { key: "teary", emoji: "🥺", label: "Made me cry" },
 ];
 
 const NAME_KEY = "olw_username";
@@ -198,10 +198,10 @@ export default function NotesBoard() {
             className="olw-script text-2xl"
             style={{ color: "var(--olw-rose)" }}
           >
-            bago tayo magsimula
+            before we begin
           </p>
           <h2 className="olw-display text-2xl font-semibold mt-1 mb-6">
-            Kaninong tala ito?
+            Whose note is this?
           </h2>
           <div className="flex gap-3 justify-center">
             <button
@@ -230,15 +230,14 @@ export default function NotesBoard() {
   if (streak.securedToday) {
     streakMsg =
       streak.current > 1
-        ? "Naka-secure na ang streak ngayong araw!"
-        : "Simula ng bagong streak — ituloy bukas!";
+        ? "Streak secured for today!"
+        : "New streak started — keep it going tomorrow!";
   } else if (streak.atRisk) {
     streakMsg = missingToday.includes(username)
-      ? "Ikaw na lang! Mag-iwan ng tala bago matapos ang araw."
-      : `Hinihintay pa si ${missingToday[0]}. I-secure niyo ang streak!`;
+      ? "Just you left! Leave a note before the day ends."
+      : `Still waiting on ${missingToday[0]}. Secure the streak!`;
   } else {
-    streakMsg =
-      "Wala pang streak. Mag-iwan kayong dalawa ng tala para magsimula!";
+    streakMsg = "No streak yet. Both of you leave a note to start one!";
   }
 
   const streakBg = streak.securedToday
@@ -261,11 +260,9 @@ export default function NotesBoard() {
             className="olw-script text-2xl"
             style={{ color: "var(--olw-rose)" }}
           >
-            isang tala, araw-araw
+            one note, every day
           </p>
-          <h2 className="olw-display text-3xl font-semibold mt-1">
-            Mga Tala Namin
-          </h2>
+          <h2 className="olw-display text-3xl font-semibold mt-1">Our Notes</h2>
         </div>
 
         <div
@@ -290,8 +287,8 @@ export default function NotesBoard() {
           <div className="flex-1 min-w-0">
             <p className="olw-display text-lg font-semibold leading-none">
               {streak.current > 0
-                ? `${streak.current}-araw na streak`
-                : "Wala pang streak"}
+                ? `${streak.current}-day streak`
+                : "No streak yet"}
             </p>
             <p className="text-xs mt-1.5 opacity-80 leading-snug">
               {streakMsg}
@@ -305,39 +302,19 @@ export default function NotesBoard() {
               >
                 {streak.longest}
               </p>
-              <p className="text-[10px] opacity-50 leading-tight">
-                pinakamahaba
-              </p>
+              <p className="text-[10px] opacity-50 leading-tight">longest</p>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Mag-iwan ng tala..."
-            className="olw-input flex-1 rounded-2xl px-4 py-3 bg-white/80 text-sm border-b-2"
-            style={{ borderColor: "var(--olw-rose-soft)" }}
-          />
-          <button
-            type="submit"
-            className="olw-send-btn px-5 py-3 rounded-2xl text-white text-sm font-medium shadow-md"
-            style={{ backgroundColor: "var(--olw-rose)" }}
-          >
-            Ipadala
-          </button>
-        </form>
-
         {loading ? (
-          <p className="text-center text-sm opacity-60">Naglo-load...</p>
+          <p className="text-center text-sm opacity-60">Loading...</p>
         ) : notes.length === 0 ? (
           <p className="text-center text-sm opacity-60">
-            Wala pang tala. Ikaw muna.
+            No notes yet. You go first.
           </p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-4 mb-8">
             {notes.slice(0, visibleCount).map((note, i) => {
               const isMine = note.author === username;
               const sealedKey = reacted[note.id];
@@ -391,7 +368,7 @@ export default function NotesBoard() {
                           type="button"
                           disabled={disabled}
                           onClick={() => handleReact(note.id, r.key)}
-                          title={isSealed ? "Naka-seal na" : r.label}
+                          title={isSealed ? "Sealed" : r.label}
                           className={cls}
                           style={{
                             backgroundColor: isSealed
@@ -422,7 +399,7 @@ export default function NotesBoard() {
         )}
 
         {notes.length > visibleCount && (
-          <div className="text-center mt-5">
+          <div className="text-center mb-8">
             <button
               type="button"
               onClick={() => setVisibleCount((c) => c + 15)}
@@ -433,10 +410,28 @@ export default function NotesBoard() {
                 backgroundColor: "rgba(255,255,255,0.7)",
               }}
             >
-              Tingnan ang mga lumang tala ({notes.length - visibleCount} pa)
+              View older notes ({notes.length - visibleCount} more)
             </button>
           </div>
         )}
+
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Leave a note..."
+            className="olw-input flex-1 rounded-2xl px-4 py-3 bg-white/80 text-sm border-b-2"
+            style={{ borderColor: "var(--olw-rose-soft)" }}
+          />
+          <button
+            type="submit"
+            className="olw-send-btn px-5 py-3 rounded-2xl text-white text-sm font-medium shadow-md"
+            style={{ backgroundColor: "var(--olw-rose)" }}
+          >
+            Send
+          </button>
+        </form>
       </div>
     </div>
   );
