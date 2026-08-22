@@ -34,10 +34,17 @@ const features = [
     description: "Anniversaries, dates, and days worth remembering.",
   },
   {
-    to: "/love-notes",
+    to: "/songs",
     index: "06",
-    title: "Love Notes",
-    description: "Sweet little notes just for you.",
+    title: "Our Playlist",
+    description: "Sweet little songs just for you.",
+  },
+
+  {
+    to: "/notes",
+    index: "07",
+    title: "Our Notes",
+    description: "Our little notes just for us.",
   },
 ];
 
