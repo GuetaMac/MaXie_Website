@@ -7,6 +7,7 @@ import OpenWhen from "./pages/OpenWhen.jsx";
 import MiniGames from "./pages/MiniGames.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import Songs from "./pages/Songs.jsx";
+import Notes from "./pages/Notes.jsx";
 import PasscodeGate from "./components/PasscodeGate.jsx";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path="/mini-games" element={<MiniGames />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/songs" element={<Songs />} />
+            <Route path="/notes" element={<Notes />} />
           </Routes>
         </main>
         <footer className="text-center font-body text-xs text-plum-400 py-6">

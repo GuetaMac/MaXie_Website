@@ -10,6 +10,7 @@ const links = [
   { to: "/mini-games", label: "Mini Games" },
   { to: "/calendar", label: "Our Calendar" },
   { to: "/songs", label: "Our Playlist" },
+  { to: "/notes", label: "Our Notes" },
 ];
 
 function LockIcon(props) {
