@@ -208,7 +208,7 @@ export default function NotesBoard() {
             isang tala, araw-araw
           </p>
           <h2 className="olw-display text-3xl font-semibold mt-1">
-            Mga Tala Natin
+            Mga Tala Namin
           </h2>
         </div>
 
