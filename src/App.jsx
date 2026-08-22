@@ -9,11 +9,13 @@ import Calendar from "./pages/Calendar.jsx";
 import Songs from "./pages/Songs.jsx";
 import Notes from "./pages/Notes.jsx";
 import PasscodeGate from "./components/PasscodeGate.jsx";
+import SpecialDaySurprise from "./components/SpecialDaySurprise.jsx";
 
 function App() {
   return (
     <PasscodeGate answer="07302026" names="Macky & Trixie" storageKey={null}>
       <div className="min-h-screen flex flex-col font-body">
+        <SpecialDaySurprise />
         <Navbar />
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
           <Routes>
@@ -27,7 +29,7 @@ function App() {
             <Route path="/notes" element={<Notes />} />
           </Routes>
         </main>
-        <footer className="text-center font-body text-xs text-plum-400 py-6">
+        <footer className="text-center font-body text-xs text-plum-400 py-6 dark:text-blush-200/60">
           made with 💗 for us
         </footer>
       </div>

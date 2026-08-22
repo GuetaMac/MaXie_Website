@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply font-body text-plum-600 bg-blush-50;
+    @apply font-body text-plum-600 bg-blush-50 dark:text-blush-100 dark:bg-plum-900;
     background-image: radial-gradient(
       circle at 1px 1px,
       rgba(216, 90, 118, 0.08) 1px,
@@ -13,14 +13,23 @@
     background-size: 22px 22px;
   }
 
+  .dark body {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(255, 214, 224, 0.06) 1px,
+      transparent 0
+    );
+    background-size: 22px 22px;
+  }
+
   h1,
   h2,
   h3 {
-    @apply font-display text-plum-700;
+    @apply font-display text-plum-700 dark:text-blush-50;
   }
 
   ::selection {
-    @apply bg-rose-200 text-plum-700;
+    @apply bg-rose-200 text-plum-700 dark:bg-rose-500 dark:text-blush-50;
   }
 }
 
@@ -28,15 +37,17 @@
   /* Signature element: a soft "keepsake card" — rounded, gently tilted on hover,
      like a little card tucked into a memory box. Used across feature cards. */
   .keepsake-card {
-    @apply bg-white/80 border border-rose-100 rounded-3xl shadow-sm transition-all duration-200;
+    @apply bg-white/80 border border-rose-100 rounded-3xl shadow-sm transition-all duration-200
+           dark:bg-plum-700/80 dark:border-plum-500/40;
   }
 
   .keepsake-card:hover {
-    @apply shadow-md -translate-y-0.5 border-rose-200;
+    @apply shadow-md -translate-y-0.5 border-rose-200 dark:border-rose-400/50;
   }
 
   .page-eyebrow {
-    @apply inline-block text-xs tracking-[0.2em] uppercase text-rose-500 font-semibold mb-2;
+    @apply inline-block text-xs tracking-[0.2em] uppercase text-rose-500 font-semibold mb-2
+           dark:text-rose-300;
   }
 }
 

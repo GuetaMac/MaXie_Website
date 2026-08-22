@@ -62,7 +62,7 @@ function OpenWhen() {
       <div className="mb-10 text-center sm:text-left">
         <span className="page-eyebrow">Open When...</span>
         <h1 className="text-3xl sm:text-4xl">Open When...</h1>
-        <p className="mt-2 text-plum-400 max-w-md mx-auto sm:mx-0">
+        <p className="mt-2 text-plum-400 max-w-md mx-auto sm:mx-0 dark:text-blush-200/80">
           Little letters for different moments.
         </p>
       </div>
@@ -74,19 +74,19 @@ function OpenWhen() {
             key={letter.id}
             type="button"
             onClick={() => setActiveLetter(letter)}
-            className="group text-left rounded-3xl border border-rose-100 bg-white p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-rose-200"
+            className="group text-left rounded-3xl border border-rose-100 bg-white p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-rose-200 dark:border-plum-500/40 dark:bg-plum-800 dark:hover:border-rose-300/40"
           >
-            <span className="text-xs font-semibold tracking-[0.25em] text-rose-300">
+            <span className="text-xs font-semibold tracking-[0.25em] text-rose-300 dark:text-blush-200/60">
               {String(i + 1).padStart(2, "0")}
             </span>
 
-            <div className="mt-4 h-px w-8 bg-rose-200 transition-all duration-200 group-hover:w-14 group-hover:bg-rose-400" />
+            <div className="mt-4 h-px w-8 bg-rose-200 transition-all duration-200 group-hover:w-14 group-hover:bg-rose-400 dark:bg-plum-600 dark:group-hover:bg-rose-300" />
 
-            <h3 className="mt-4 text-base font-semibold text-plum-700">
+            <h3 className="mt-4 text-base font-semibold text-plum-700 dark:text-blush-50">
               {letter.title}
             </h3>
 
-            <span className="mt-5 inline-block text-sm font-semibold text-rose-500 transition-transform duration-200 group-hover:translate-x-1">
+            <span className="mt-5 inline-block text-sm font-semibold text-rose-500 transition-transform duration-200 group-hover:translate-x-1 dark:text-rose-300">
               Read →
             </span>
           </button>
@@ -96,28 +96,28 @@ function OpenWhen() {
       {/* Modal */}
       {activeLetter && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-plum-700/40 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-plum-700/40 px-4 dark:bg-plum-950/60"
           onClick={() => setActiveLetter(null)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white border border-rose-100 shadow-lg p-8 relative"
+            className="w-full max-w-md rounded-3xl bg-white border border-rose-100 shadow-lg p-8 relative dark:bg-plum-800 dark:border-plum-500/40"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setActiveLetter(null)}
               aria-label="Close letter"
-              className="absolute top-5 right-5 text-plum-400 hover:text-rose-500 text-sm font-semibold"
+              className="absolute top-5 right-5 text-plum-400 hover:text-rose-500 text-sm font-semibold dark:text-blush-200/80 dark:hover:text-rose-300"
             >
               Close
             </button>
 
             <span className="page-eyebrow">Letter</span>
-            <h2 className="text-xl font-display text-plum-700 pr-16">
+            <h2 className="text-xl font-display text-plum-700 pr-16 dark:text-blush-50">
               {activeLetter.title}
             </h2>
 
-            <p className="mt-5 text-plum-500 leading-relaxed whitespace-pre-line text-justify">
+            <p className="mt-5 text-plum-500 leading-relaxed whitespace-pre-line text-justify dark:text-blush-100">
               {activeLetter.message}
             </p>
           </div>

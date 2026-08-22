@@ -123,11 +123,13 @@ function Home() {
       : undefined;
 
   const streakCardClass = streak.securedToday
-    ? "border-gold-400 bg-gold-300/30"
+    ? "border-gold-400 bg-gold-300/30 dark:border-gold-500/40 dark:bg-gold-500/10"
     : streak.atRisk
-      ? "border-rose-400 bg-rose-100"
-      : "border-dashed border-rose-200 bg-rose-50";
-  const streakNumberClass = streak.atRisk ? "text-rose-600" : "text-rose-500";
+      ? "border-rose-400 bg-rose-100 dark:border-rose-400/40 dark:bg-rose-900/20"
+      : "border-dashed border-rose-200 bg-rose-50 dark:border-plum-500/40 dark:bg-plum-700/60";
+  const streakNumberClass = streak.atRisk
+    ? "text-rose-600 dark:text-rose-300"
+    : "text-rose-500 dark:text-rose-300";
 
   return (
     <div>
@@ -151,29 +153,29 @@ function Home() {
       {/* Hero */}
       <section
         style={{ transitionDelay: "0ms" }}
-        className={`relative overflow-hidden rounded-3xl border border-rose-100 bg-white px-6 py-10 sm:px-12 sm:py-12 text-center mb-10 ${fadeUp()}`}
+        className={`relative overflow-hidden rounded-3xl border border-rose-100 bg-white px-6 py-10 sm:px-12 sm:py-12 text-center mb-10 dark:border-plum-500/40 dark:bg-plum-700 ${fadeUp()}`}
       >
         {/* corner frame accents */}
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rotate-45 rounded-3xl border border-rose-100" />
-        <div className="pointer-events-none absolute -bottom-14 -left-14 h-40 w-40 rotate-12 rounded-3xl border border-rose-100" />
+        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rotate-45 rounded-3xl border border-rose-100 dark:border-plum-500/30" />
+        <div className="pointer-events-none absolute -bottom-14 -left-14 h-40 w-40 rotate-12 rounded-3xl border border-rose-100 dark:border-plum-500/30" />
 
         {/* ambient drifting hearts */}
         <span
-          className="olw-heart pointer-events-none absolute bottom-10 left-[18%] text-rose-200"
+          className="olw-heart pointer-events-none absolute bottom-10 left-[18%] text-rose-200 dark:text-rose-300/60"
           style={{ animationDelay: "0s" }}
           aria-hidden="true"
         >
           ♥
         </span>
         <span
-          className="olw-heart pointer-events-none absolute bottom-16 left-[68%] text-gold-400"
+          className="olw-heart pointer-events-none absolute bottom-16 left-[68%] text-gold-400 dark:text-gold-400/70"
           style={{ animationDelay: "3s" }}
           aria-hidden="true"
         >
           ♥
         </span>
         <span
-          className="olw-heart pointer-events-none absolute bottom-6 left-[45%] text-blush-400"
+          className="olw-heart pointer-events-none absolute bottom-6 left-[45%] text-blush-400 dark:text-blush-300/60"
           style={{ animationDelay: "6s" }}
           aria-hidden="true"
         >
@@ -210,31 +212,31 @@ function Home() {
           />
         </svg>
 
-        <p className="mt-3 font-body text-plum-400 max-w-md mx-auto">
+        <p className="mt-3 font-body text-plum-400 max-w-md mx-auto dark:text-blush-200/80">
           A little place that belongs to us.
         </p>
 
         <div className="mt-6 flex items-center justify-center gap-3 sm:gap-4">
-          <span className="font-display text-xl sm:text-2xl text-plum-700">
+          <span className="font-display text-xl sm:text-2xl text-plum-700 dark:text-blush-50">
             {names}
           </span>
         </div>
 
         <div className="mt-7 flex flex-col sm:flex-row items-stretch justify-center gap-3 sm:gap-4">
-          <div className="min-w-[9.5rem] rounded-2xl border border-dashed border-rose-200 bg-rose-50 px-5 py-3 text-center">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-rose-400 font-semibold">
+          <div className="min-w-[9.5rem] rounded-2xl border border-dashed border-rose-200 bg-rose-50 px-5 py-3 text-center dark:border-rose-400/30 dark:bg-plum-700/60">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-rose-400 font-semibold dark:text-rose-300">
               Together Since
             </p>
-            <p className="mt-1 font-body text-plum-600 font-medium">
+            <p className="mt-1 font-body text-plum-600 font-medium dark:text-blush-100">
               {togetherSince}
             </p>
           </div>
 
-          <div className="min-w-[9.5rem] rounded-2xl border border-dashed border-gold-400 bg-gold-300/30 px-5 py-3 text-center">
-            <p className="font-display text-3xl text-rose-500 tabular-nums leading-none">
+          <div className="min-w-[9.5rem] rounded-2xl border border-dashed border-gold-400 bg-gold-300/30 px-5 py-3 text-center dark:border-gold-500/40 dark:bg-gold-500/10">
+            <p className="font-display text-3xl text-rose-500 tabular-nums leading-none dark:text-rose-300">
               {daysTogether}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-plum-400 font-semibold">
+            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-plum-400 font-semibold dark:text-blush-200/80">
               Days Together
             </p>
           </div>
@@ -247,14 +249,14 @@ function Home() {
             >
               {streak.current}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-plum-400 font-semibold">
+            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-plum-400 font-semibold dark:text-blush-200/80">
               Day Streak
             </p>
           </div>
         </div>
 
         {streak.atRisk && (
-          <p className="mt-4 text-xs font-semibold text-rose-500">
+          <p className="mt-4 text-xs font-semibold text-rose-500 dark:text-rose-300">
             Someone hasn't written today yet — keep the streak alive!
           </p>
         )}
@@ -273,20 +275,22 @@ function Home() {
       {/* Today's reminder */}
       <section
         style={{ transitionDelay: "220ms" }}
-        className={`mt-8 rounded-3xl border border-rose-100 bg-white px-6 py-7 sm:px-10 relative overflow-hidden ${fadeUp()}`}
+        className={`mt-8 rounded-3xl border border-rose-100 bg-white px-6 py-7 sm:px-10 relative overflow-hidden dark:border-plum-500/40 dark:bg-plum-700 ${fadeUp()}`}
       >
         <div className="absolute left-0 top-0 h-full w-1.5 bg-gold-400" />
 
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="page-eyebrow">Today's Little Reminder</span>
-            <p className="font-display text-lg text-plum-700">{reminder}</p>
+            <p className="font-display text-lg text-plum-700 dark:text-blush-50">
+              {reminder}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={handleShuffleReminder}
-            className="mt-1 shrink-0 font-body text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors whitespace-nowrap"
+            className="mt-1 shrink-0 font-body text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors whitespace-nowrap dark:text-rose-300 dark:hover:text-rose-200"
           >
             Another one →
           </button>

@@ -169,7 +169,7 @@ function CountdownTicket({ icon, eyebrow, title, target, now, accent }) {
   });
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm dark:border-plum-500/40 dark:bg-plum-800">
       <div className={`h-1.5 w-full ${accent.bar}`} />
       <div className="p-6">
         <div className="flex items-center gap-2">
@@ -179,16 +179,18 @@ function CountdownTicket({ icon, eyebrow, title, target, now, accent }) {
             {icon}
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-rose-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-rose-400 dark:text-blush-200/80">
               {eyebrow}
             </p>
-            <p className="font-serif text-lg font-semibold text-rose-900">
+            <p className="font-serif text-lg font-semibold text-rose-900 dark:text-blush-50">
               {title}
             </p>
           </div>
         </div>
 
-        <p className="mt-1 text-sm text-rose-500">{dateLabel}</p>
+        <p className="mt-1 text-sm text-rose-500 dark:text-blush-100">
+          {dateLabel}
+        </p>
 
         <div className="mt-5 grid grid-cols-4 gap-2 text-center">
           {[
@@ -199,12 +201,12 @@ function CountdownTicket({ icon, eyebrow, title, target, now, accent }) {
           ].map((item) => (
             <div
               key={item.l}
-              className="rounded-xl bg-rose-50 py-2.5 transition-transform duration-200 hover:scale-105"
+              className="rounded-xl bg-rose-50 py-2.5 transition-transform duration-200 hover:scale-105 dark:bg-plum-700"
             >
-              <p className="font-serif text-xl font-bold tabular-nums text-rose-800">
+              <p className="font-serif text-xl font-bold tabular-nums text-rose-800 dark:text-blush-50">
                 {String(item.v).padStart(2, "0")}
               </p>
-              <p className="text-[10px] uppercase tracking-wide text-rose-400">
+              <p className="text-[10px] uppercase tracking-wide text-rose-400 dark:text-blush-200/80">
                 {item.l}
               </p>
             </div>
@@ -215,7 +217,10 @@ function CountdownTicket({ icon, eyebrow, title, target, now, accent }) {
       {/* perforated ticket edge */}
       <div className="pointer-events-none absolute inset-y-0 left-[-8px] flex flex-col justify-evenly">
         {Array.from({ length: 6 }).map((_, i) => (
-          <span key={i} className="h-2.5 w-2.5 rounded-full bg-rose-50" />
+          <span
+            key={i}
+            className="h-2.5 w-2.5 rounded-full bg-rose-50 dark:bg-plum-900"
+          />
         ))}
       </div>
     </div>
@@ -293,10 +298,10 @@ function Calendar() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-serif text-3xl font-bold text-rose-900">
+        <h1 className="font-serif text-3xl font-bold text-rose-900 dark:text-blush-50">
           Our Calendar
         </h1>
-        <p className="mt-1 text-rose-500">
+        <p className="mt-1 text-rose-500 dark:text-blush-100">
           Every date that matters to us, all in one place.
         </p>
       </div>
@@ -304,33 +309,41 @@ function Calendar() {
       {/* Countdown tickets */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CountdownTicket
-          icon={<Heart className="h-4 w-4 text-rose-600" />}
+          icon={<Heart className="h-4 w-4 text-rose-600 dark:text-rose-300" />}
           eyebrow={`Countdown to ${anniversaryOrdinal} Anniversary`}
           title={`${anniversaryOrdinal} Anniversary`}
           target={anniversary}
           now={now}
-          accent={{ bar: "bg-rose-400", chip: "bg-rose-100" }}
+          accent={{
+            bar: "bg-rose-400",
+            chip: "bg-rose-100 dark:bg-rose-500/20",
+          }}
         />
         <CountdownTicket
-          icon={<Sparkles className="h-4 w-4 text-amber-600" />}
+          icon={
+            <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+          }
           eyebrow={`Countdown to ${monthsaryOrdinal} Monthsary`}
           title={`${monthsaryOrdinal} Monthsary`}
           target={monthsary}
           now={now}
-          accent={{ bar: "bg-amber-400", chip: "bg-amber-100" }}
+          accent={{
+            bar: "bg-amber-400",
+            chip: "bg-amber-100 dark:bg-amber-500/20",
+          }}
         />
       </div>
 
       {/* Month calendar */}
-      <div className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm sm:p-6 dark:border-plum-500/40 dark:bg-plum-800">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="font-serif text-xl font-semibold text-rose-900">
+            <p className="font-serif text-xl font-semibold text-rose-900 dark:text-blush-50">
               {MONTH_NAMES[month]} {year}
             </p>
             <button
               onClick={goToday}
-              className="text-xs font-medium text-rose-400 hover:text-rose-600"
+              className="text-xs font-medium text-rose-400 hover:text-rose-600 dark:text-blush-200/80 dark:hover:text-rose-300"
             >
               Back to today
             </button>
@@ -339,21 +352,21 @@ function Calendar() {
             <button
               onClick={goPrev}
               aria-label="Previous month"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 text-rose-500 transition hover:bg-rose-50"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 text-rose-500 transition hover:bg-rose-50 dark:border-plum-500/40 dark:text-blush-100 dark:hover:bg-plum-700"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={goNext}
               aria-label="Next month"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 text-rose-500 transition hover:bg-rose-50"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 text-rose-500 transition hover:bg-rose-50 dark:border-plum-500/40 dark:text-blush-100 dark:hover:bg-plum-700"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-wide text-rose-300">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-wide text-rose-300 dark:text-blush-200/60">
           {WEEKDAYS.map((w, i) => (
             <div key={i} className="py-1">
               {w}
@@ -378,18 +391,22 @@ function Calendar() {
                       "flex h-full w-full flex-col items-center justify-center rounded-xl text-sm transition-transform duration-150",
                       tag
                         ? "cursor-default font-semibold hover:scale-105"
-                        : "text-rose-700",
+                        : "text-rose-700 dark:text-blush-100",
                       tag?.type === "anniversary"
-                        ? "bg-rose-500 text-white shadow-sm"
+                        ? "bg-rose-500 text-white shadow-sm dark:bg-rose-600"
                         : "",
                       tag?.type === "birthday"
-                        ? "bg-purple-100 text-purple-700"
+                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
                         : "",
                       tag?.type === "monthsary"
-                        ? "bg-amber-100 text-amber-700"
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                         : "",
-                      today && !tag ? "ring-2 ring-rose-400 ring-offset-1" : "",
-                      today && tag ? "ring-2 ring-rose-900 ring-offset-1" : "",
+                      today && !tag
+                        ? "ring-2 ring-rose-400 ring-offset-1 dark:ring-rose-300"
+                        : "",
+                      today && tag
+                        ? "ring-2 ring-rose-900 ring-offset-1 dark:ring-blush-50"
+                        : "",
                     ].join(" ")}
                   >
                     <span>{day}</span>
@@ -415,7 +432,7 @@ function Calendar() {
         </div>
 
         {/* Legend */}
-        <div className="mt-5 flex flex-wrap gap-4 border-t border-rose-100 pt-4 text-xs text-rose-500">
+        <div className="mt-5 flex flex-wrap gap-4 border-t border-rose-100 pt-4 text-xs text-rose-500 dark:border-plum-600 dark:text-blush-100">
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />{" "}
             Anniversary
@@ -460,16 +477,18 @@ function Calendar() {
         ].map((item) => (
           <div
             key={item.label}
-            className="flex items-start gap-4 rounded-2xl border border-rose-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+            className="flex items-start gap-4 rounded-2xl border border-rose-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-plum-500/40 dark:bg-plum-800"
           >
-            <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-500">
+            <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-500 dark:bg-rose-500/20 dark:text-rose-300">
               {item.icon}
             </span>
             <div>
-              <p className="font-serif font-semibold text-rose-900">
+              <p className="font-serif font-semibold text-rose-900 dark:text-blush-50">
                 {item.label}
               </p>
-              <p className="mt-0.5 text-sm text-rose-400">{item.value}</p>
+              <p className="mt-0.5 text-sm text-rose-400 dark:text-blush-200/80">
+                {item.value}
+              </p>
             </div>
           </div>
         ))}

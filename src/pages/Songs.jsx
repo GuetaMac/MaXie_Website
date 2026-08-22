@@ -88,7 +88,7 @@ function VinylDisc({ playing }) {
         animation: playing ? "spin-disc 3.2s linear infinite" : "none",
       }}
     >
-      <span className="h-2.5 w-2.5 rounded-full bg-rose-100" />
+      <span className="h-2.5 w-2.5 rounded-full bg-rose-100 dark:bg-blush-100" />
     </div>
   );
 }
@@ -97,21 +97,21 @@ function EqualizerBars() {
   return (
     <span className="flex items-end gap-0.5" aria-hidden="true">
       <span
-        className="w-0.5 rounded-full bg-rose-400"
+        className="w-0.5 rounded-full bg-rose-400 dark:bg-rose-300"
         style={{
           animation: "eq-bounce 0.9s ease-in-out infinite",
           animationDelay: "0s",
         }}
       />
       <span
-        className="w-0.5 rounded-full bg-rose-400"
+        className="w-0.5 rounded-full bg-rose-400 dark:bg-rose-300"
         style={{
           animation: "eq-bounce 0.9s ease-in-out infinite",
           animationDelay: "0.2s",
         }}
       />
       <span
-        className="w-0.5 rounded-full bg-rose-400"
+        className="w-0.5 rounded-full bg-rose-400 dark:bg-rose-300"
         style={{
           animation: "eq-bounce 0.9s ease-in-out infinite",
           animationDelay: "0.4s",
@@ -167,10 +167,10 @@ function SongCard({ song, index, activeIndex, onPlay, registerRef }) {
         animation: `fade-in-up 0.6s ease both`,
         animationDelay: `${index * 90}ms`,
       }}
-      className={`rounded-2xl border bg-white p-5 shadow-sm transition-all duration-300 sm:p-6 ${
+      className={`rounded-2xl border bg-white p-5 shadow-sm transition-all duration-300 sm:p-6 dark:bg-plum-800 ${
         isPlaying
-          ? "border-rose-300 shadow-md"
-          : "border-rose-100 hover:border-rose-200 hover:shadow-md"
+          ? "border-rose-300 shadow-md dark:border-rose-300/50"
+          : "border-rose-100 hover:border-rose-200 hover:shadow-md dark:border-plum-500/40 dark:hover:border-rose-300/40"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -180,33 +180,35 @@ function SongCard({ song, index, activeIndex, onPlay, registerRef }) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold tracking-[0.2em] text-rose-300">
+                <span className="text-xs font-semibold tracking-[0.2em] text-rose-300 dark:text-blush-200/60">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 {isPlaying && (
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-rose-400">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-rose-400 dark:text-rose-300">
                     <EqualizerBars /> Now playing
                   </span>
                 )}
               </div>
-              <h3 className="mt-1 truncate font-display text-lg text-plum-700 sm:text-xl">
+              <h3 className="mt-1 truncate font-display text-lg text-plum-700 sm:text-xl dark:text-blush-50">
                 {song.title}
               </h3>
               {song.artist && (
-                <p className="text-sm text-plum-400">{song.artist}</p>
+                <p className="text-sm text-plum-400 dark:text-blush-200/80">
+                  {song.artist}
+                </p>
               )}
             </div>
             {song.for && (
-              <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-400">
+              <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-400 dark:bg-rose-500/20 dark:text-rose-300">
                 {song.for}
               </span>
             )}
           </div>
 
           {song.note && (
-            <div className="mt-3 flex gap-2 rounded-xl bg-rose-50/60 px-3 py-2.5">
-              <NoteIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-300" />
-              <p className="text-sm italic leading-relaxed text-plum-500">
+            <div className="mt-3 flex gap-2 rounded-xl bg-rose-50/60 px-3 py-2.5 dark:bg-plum-700/60">
+              <NoteIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-300 dark:text-rose-300" />
+              <p className="text-sm italic leading-relaxed text-plum-500 dark:text-blush-100">
                 {song.note}
               </p>
             </div>
@@ -237,11 +239,11 @@ function SongCard({ song, index, activeIndex, onPlay, registerRef }) {
                   value={current}
                   onChange={handleSeek}
                   style={{
-                    background: `linear-gradient(to right, #fb7185 ${percent}%, #ffe4e6 ${percent}%)`,
+                    background: `linear-gradient(to right, #fb7185 ${percent}%, var(--track-bg, #ffe4e6) ${percent}%)`,
                   }}
-                  className="w-full accent-rose-400"
+                  className="w-full accent-rose-400 [--track-bg:#ffe4e6] dark:[--track-bg:#3d2438]"
                 />
-                <div className="mt-1 flex justify-between text-xs text-plum-400">
+                <div className="mt-1 flex justify-between text-xs text-plum-400 dark:text-blush-200/80">
                   <span>{formatTime(current)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
@@ -256,13 +258,13 @@ function SongCard({ song, index, activeIndex, onPlay, registerRef }) {
               />
             </div>
           ) : (
-            <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-400">
+            <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-400 dark:bg-plum-700 dark:text-blush-200/80">
               Not added yet — drop{" "}
-              <code className="rounded bg-white px-1.5 py-0.5 text-rose-500">
+              <code className="rounded bg-white px-1.5 py-0.5 text-rose-500 dark:bg-plum-800 dark:text-rose-300">
                 {song.audioKey}.mp3
               </code>{" "}
               into{" "}
-              <code className="rounded bg-white px-1.5 py-0.5 text-rose-500">
+              <code className="rounded bg-white px-1.5 py-0.5 text-rose-500 dark:bg-plum-800 dark:text-rose-300">
                 src/assets/songs/
               </code>
               .
@@ -306,7 +308,7 @@ function Songs() {
             Our Playlist
           </span>
           <h1 className="mt-2 text-4xl sm:text-5xl">Our Playlist</h1>
-          <p className="mx-auto mt-3 max-w-md text-base text-plum-400 sm:mx-0 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-md text-base text-plum-400 sm:mx-0 sm:text-lg dark:text-blush-200/80">
             The songs that sound like us.
           </p>
         </div>

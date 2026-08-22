@@ -120,6 +120,8 @@ export default function NotesBoard() {
         --olw-ice-strong: #6FA9B6;
         --olw-alert: #DE8A4C;
         --olw-alert-soft: #FCEBDD;
+        --olw-surface: #FFFDFB;
+        --olw-chip-bg: rgba(255,255,255,0.7);
         font-family: 'Inter', sans-serif;
         color: var(--olw-ink);
         background-color: var(--olw-paper);
@@ -127,6 +129,24 @@ export default function NotesBoard() {
         background-size: 18px 18px;
         min-height: 100%;
       }
+
+      /* Dark mode palette — mirrors the paper/plum/blush scheme used
+         across the rest of the site. Assumes a "dark" class on <html>. */
+      .dark .olw-root {
+        --olw-paper: #2b1a26;
+        --olw-ink: #f7e9ee;
+        --olw-rose: #f0a8bb;
+        --olw-rose-soft: rgba(240,168,187,0.16);
+        --olw-gold: #e0b563;
+        --olw-gold-soft: rgba(224,181,99,0.16);
+        --olw-ice: rgba(120,190,200,0.14);
+        --olw-ice-strong: #9fd2db;
+        --olw-alert: #eda874;
+        --olw-alert-soft: rgba(237,168,116,0.16);
+        --olw-surface: #3d2438;
+        --olw-chip-bg: rgba(61,36,56,0.7);
+      }
+
       .olw-display { font-family: 'Fraunces', serif; }
       .olw-script { font-family: 'Caveat', cursive; }
 
@@ -191,8 +211,11 @@ export default function NotesBoard() {
       <div className="olw-root flex items-center justify-center p-6">
         {styleBlock}
         <div
-          className="max-w-sm w-full text-center bg-white/70 backdrop-blur rounded-3xl p-8 shadow-sm"
-          style={{ border: "1px solid var(--olw-rose-soft)" }}
+          className="max-w-sm w-full text-center backdrop-blur rounded-3xl p-8 shadow-sm"
+          style={{
+            border: "1px solid var(--olw-rose-soft)",
+            backgroundColor: "var(--olw-chip-bg)",
+          }}
         >
           <p
             className="olw-script text-2xl"
@@ -330,7 +353,7 @@ export default function NotesBoard() {
                   style={{
                     backgroundColor: isMine
                       ? "var(--olw-rose-soft)"
-                      : "#FFFDFB",
+                      : "var(--olw-surface)",
                     border: isMine ? "none" : "1px solid var(--olw-rose-soft)",
                     transform: `rotate(${rotate})`,
                   }}
@@ -373,7 +396,7 @@ export default function NotesBoard() {
                           style={{
                             backgroundColor: isSealed
                               ? "var(--olw-gold-soft)"
-                              : "rgba(255,255,255,0.7)",
+                              : "var(--olw-chip-bg)",
                             border: `1px solid ${
                               isSealed
                                 ? "var(--olw-gold)"
@@ -407,7 +430,7 @@ export default function NotesBoard() {
               style={{
                 color: "var(--olw-rose)",
                 border: "1px solid var(--olw-rose-soft)",
-                backgroundColor: "rgba(255,255,255,0.7)",
+                backgroundColor: "var(--olw-chip-bg)",
               }}
             >
               View older notes ({notes.length - visibleCount} more)
@@ -421,8 +444,11 @@ export default function NotesBoard() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Leave a note..."
-            className="olw-input flex-1 rounded-2xl px-4 py-3 bg-white/80 text-sm border-b-2"
-            style={{ borderColor: "var(--olw-rose-soft)" }}
+            className="olw-input flex-1 rounded-2xl px-4 py-3 text-sm border-b-2"
+            style={{
+              borderColor: "var(--olw-rose-soft)",
+              backgroundColor: "var(--olw-chip-bg)",
+            }}
           />
           <button
             type="submit"

@@ -28,10 +28,13 @@ function Memories() {
       />
 
       {photos.length === 0 ? (
-        <div className="keepsake-card p-10 text-center text-plum-400 text-sm">
+        <div className="keepsake-card p-10 text-center text-plum-400 text-sm dark:text-blush-200/80">
           No photos yet — drop images into{" "}
-          <code className="text-rose-500">src/assets/memories</code>, named
-          img1, img2, img3 (and so on), and they'll show up here automatically.
+          <code className="text-rose-500 dark:text-rose-300">
+            src/assets/memories
+          </code>
+          , named img1, img2, img3 (and so on), and they'll show up here
+          automatically.
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

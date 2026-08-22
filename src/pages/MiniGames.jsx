@@ -88,7 +88,7 @@ function MiniGames() {
       <div className="mb-10 text-center sm:text-left">
         <span className="page-eyebrow">Mini Games</span>
         <h1 className="text-3xl sm:text-4xl">Mini Games</h1>
-        <p className="mt-2 text-plum-400 max-w-md mx-auto sm:mx-0">
+        <p className="mt-2 text-plum-400 max-w-md mx-auto sm:mx-0 dark:text-blush-200/80">
           A few little games just for us.
         </p>
       </div>
@@ -100,22 +100,22 @@ function MiniGames() {
               key={game.id}
               type="button"
               onClick={() => setActiveGame(game.id)}
-              className="group text-left rounded-3xl border border-rose-100 bg-white p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-rose-200"
+              className="group text-left rounded-3xl border border-rose-100 bg-white p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-rose-200 dark:border-plum-500/40 dark:bg-plum-800 dark:hover:border-rose-300/40"
             >
-              <span className="text-xs font-semibold tracking-[0.25em] text-rose-300">
+              <span className="text-xs font-semibold tracking-[0.25em] text-rose-300 dark:text-blush-200/60">
                 {game.index}
               </span>
 
-              <div className="mt-4 h-px w-8 bg-rose-200 transition-all duration-200 group-hover:w-14 group-hover:bg-rose-400" />
+              <div className="mt-4 h-px w-8 bg-rose-200 transition-all duration-200 group-hover:w-14 group-hover:bg-rose-400 dark:bg-plum-600 dark:group-hover:bg-rose-300" />
 
-              <h3 className="mt-4 text-base font-semibold text-plum-700">
+              <h3 className="mt-4 text-base font-semibold text-plum-700 dark:text-blush-50">
                 {game.title}
               </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-plum-400">
+              <p className="mt-1.5 text-sm leading-relaxed text-plum-400 dark:text-blush-200/80">
                 {game.description}
               </p>
 
-              <span className="mt-5 inline-block text-sm font-semibold text-rose-500 transition-transform duration-200 group-hover:translate-x-1">
+              <span className="mt-5 inline-block text-sm font-semibold text-rose-500 transition-transform duration-200 group-hover:translate-x-1 dark:text-rose-300">
                 Play →
               </span>
             </button>

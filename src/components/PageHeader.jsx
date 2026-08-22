@@ -10,9 +10,11 @@ function PageHeader({ icon, title, description }) {
     <div className="mb-8 text-center sm:text-left">
       <span className="text-4xl">{icon}</span>
       <h1 className="text-3xl mt-2 mb-1">{title}</h1>
-      <p className="text-plum-400 max-w-xl mx-auto sm:mx-0">{description}</p>
+      <p className="text-plum-400 max-w-xl mx-auto sm:mx-0 dark:text-blush-200/80">
+        {description}
+      </p>
     </div>
-  )
+  );
 }
 
-export default PageHeader
+export default PageHeader;

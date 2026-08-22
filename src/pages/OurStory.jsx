@@ -73,7 +73,7 @@ function MilestoneCard({ milestone, reversed, sectionRef, onPhotoClick }) {
 
   return (
     <div ref={sectionRef} className="relative scroll-mt-24 pl-14 sm:pl-0">
-      <span className="absolute left-0 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-rose-200 bg-white text-rose-400 sm:left-1/2 sm:-translate-x-1/2">
+      <span className="absolute left-0 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-rose-200 bg-white text-rose-400 sm:left-1/2 sm:-translate-x-1/2 dark:border-plum-500/40 dark:bg-plum-800 dark:text-rose-300">
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
           <path d="M12 21s-6.716-4.35-9.428-8.09C.86 10.36 1.2 6.9 3.9 5.2c2.2-1.4 4.9-.8 6.4 1.2l1.7 2.2 1.7-2.2c1.5-2 4.2-2.6 6.4-1.2 2.7 1.7 3.04 5.16 1.33 7.71C18.72 16.65 12 21 12 21z" />
         </svg>
@@ -90,22 +90,22 @@ function MilestoneCard({ milestone, reversed, sectionRef, onPhotoClick }) {
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(24px)",
             }}
-            className="rounded-3xl border border-rose-100 bg-white p-7 shadow-sm sm:p-10"
+            className="rounded-3xl border border-rose-100 bg-white p-7 shadow-sm sm:p-10 dark:border-plum-500/40 dark:bg-plum-800"
           >
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold tracking-[0.3em] text-rose-300">
+              <span className="text-sm font-semibold tracking-[0.3em] text-rose-300 dark:text-blush-200/60">
                 {milestone.index}
               </span>
               {milestone.date && (
-                <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-400">
+                <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-400 dark:bg-rose-500/20 dark:text-rose-300">
                   {milestone.date}
                 </span>
               )}
             </div>
 
-            <div className="mt-5 h-px w-10 bg-rose-200" />
+            <div className="mt-5 h-px w-10 bg-rose-200 dark:bg-plum-600" />
 
-            <h3 className="mt-5 font-display text-2xl text-plum-700 sm:text-3xl">
+            <h3 className="mt-5 font-display text-2xl text-plum-700 sm:text-3xl dark:text-blush-50">
               {milestone.label}
             </h3>
 
@@ -113,7 +113,7 @@ function MilestoneCard({ milestone, reversed, sectionRef, onPhotoClick }) {
               <button
                 type="button"
                 onClick={() => onPhotoClick(photo, milestone.label)}
-                className="mt-6 flex w-full cursor-zoom-in justify-center overflow-hidden rounded-2xl bg-rose-50"
+                className="mt-6 flex w-full cursor-zoom-in justify-center overflow-hidden rounded-2xl bg-rose-50 dark:bg-plum-700"
                 aria-label={`View larger photo for ${milestone.label}`}
               >
                 <img
@@ -124,7 +124,7 @@ function MilestoneCard({ milestone, reversed, sectionRef, onPhotoClick }) {
               </button>
             )}
 
-            <p className="mt-6 whitespace-pre-line text-justify text-base leading-loose text-plum-500 sm:text-lg">
+            <p className="mt-6 whitespace-pre-line text-justify text-base leading-loose text-plum-500 sm:text-lg dark:text-blush-100">
               {milestone.story}
             </p>
           </div>
@@ -138,7 +138,7 @@ function ToBeContinuedCard() {
   const [ref, visible] = useReveal();
   return (
     <div className="relative pl-14 sm:pl-0">
-      <span className="absolute left-0 top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-dashed border-rose-200 bg-white text-rose-300 sm:left-1/2 sm:-translate-x-1/2">
+      <span className="absolute left-0 top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-dashed border-rose-200 bg-white text-rose-300 sm:left-1/2 sm:-translate-x-1/2 dark:border-plum-500/40 dark:bg-plum-800 dark:text-blush-200/60">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -161,12 +161,12 @@ function ToBeContinuedCard() {
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(24px)",
         }}
-        className="mx-auto max-w-md rounded-3xl border border-dashed border-rose-200 bg-rose-50/60 p-8 text-center sm:p-9"
+        className="mx-auto max-w-md rounded-3xl border border-dashed border-rose-200 bg-rose-50/60 p-8 text-center sm:p-9 dark:border-plum-500/40 dark:bg-plum-800/60"
       >
-        <h3 className="font-display text-xl text-plum-700">
+        <h3 className="font-display text-xl text-plum-700 dark:text-blush-50">
           To be continued...
         </h3>
-        <p className="mt-2 text-base text-plum-400">
+        <p className="mt-2 text-base text-plum-400 dark:text-blush-200/80">
           Our story is still being written. More milestones, more memories —
           this space will keep growing with us.
         </p>
@@ -199,7 +199,7 @@ function Lightbox({ photo, label, onClose }) {
         type="button"
         onClick={onClose}
         aria-label="Close photo"
-        className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-plum-700 hover:bg-white"
+        className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-plum-700 hover:bg-white dark:bg-plum-800/90 dark:text-blush-50 dark:hover:bg-plum-800"
       >
         <svg
           viewBox="0 0 24 24"
@@ -254,7 +254,7 @@ function OurStory() {
       <div className="mb-8 text-center sm:text-left">
         <span className="page-eyebrow text-sm tracking-[0.3em]">Our Story</span>
         <h1 className="mt-2 text-4xl sm:text-5xl">Our Story</h1>
-        <p className="mx-auto mt-3 max-w-md text-base text-plum-400 sm:mx-0 sm:text-lg">
+        <p className="mx-auto mt-3 max-w-md text-base text-plum-400 sm:mx-0 sm:text-lg dark:text-blush-200/80">
           How we met, our first date, and every little milestone after that.
         </p>
       </div>
@@ -265,7 +265,7 @@ function OurStory() {
             key={m.index}
             type="button"
             onClick={() => scrollToMilestone(i)}
-            className="rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-rose-500 transition hover:bg-rose-50"
+            className="rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-rose-500 transition hover:bg-rose-50 dark:border-plum-500/40 dark:text-blush-100 dark:hover:bg-plum-700"
           >
             {m.label}
           </button>
@@ -273,9 +273,9 @@ function OurStory() {
       </div>
 
       <div ref={trackRef} className="relative flex flex-col gap-10">
-        <div className="absolute bottom-4 left-[17px] top-4 w-px bg-rose-100 sm:left-1/2 sm:-translate-x-1/2" />
+        <div className="absolute bottom-4 left-[17px] top-4 w-px bg-rose-100 sm:left-1/2 sm:-translate-x-1/2 dark:bg-plum-600" />
         <div
-          className="absolute left-[17px] top-4 w-px bg-rose-400 transition-all duration-150 sm:left-1/2 sm:-translate-x-1/2"
+          className="absolute left-[17px] top-4 w-px bg-rose-400 transition-all duration-150 sm:left-1/2 sm:-translate-x-1/2 dark:bg-rose-300"
           style={{ height: `${progress}%` }}
         />
 
