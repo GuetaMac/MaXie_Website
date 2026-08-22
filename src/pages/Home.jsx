@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import FeatureCard from "../components/FeatureCard.jsx";
 import PenguinMascot from "../components/PenguinMascot.jsx";
+import { useStreak } from "../hooks/useStreak.js";
+import { db } from "../firebase"; // <- baguhin kung mali yung path- ganun din
 
 const features = [
   {
@@ -85,6 +87,7 @@ function Home() {
   const daysTogether = getDaysTogether(togetherSinceDate);
   const [visible, setVisible] = useState(false);
   const [reminder, setReminder] = useState(getTodaysReminder);
+  const streak = useStreak();
 
   useEffect(() => {
     const t = window.setTimeout(() => setVisible(true), 60);
@@ -103,6 +106,28 @@ function Home() {
       return others[Math.floor(Math.random() * others.length)];
     });
   }
+
+  // Penguin mood + streak stat card both read off the same shared hook.
+  const penguinMood = streak.securedToday
+    ? "happy"
+    : streak.atRisk
+      ? "risk"
+      : "neutral";
+
+  const penguinExtraMessage = streak.securedToday
+    ? streak.current > 1
+      ? "Streak's secured today!"
+      : undefined
+    : streak.atRisk
+      ? "Psst, don't forget today's note!"
+      : undefined;
+
+  const streakCardClass = streak.securedToday
+    ? "border-gold-400 bg-gold-300/30"
+    : streak.atRisk
+      ? "border-rose-400 bg-rose-100"
+      : "border-dashed border-rose-200 bg-rose-50";
+  const streakNumberClass = streak.atRisk ? "text-rose-600" : "text-rose-500";
 
   return (
     <div>
@@ -155,7 +180,7 @@ function Home() {
           ♥
         </span>
 
-        <PenguinMascot />
+        <PenguinMascot mood={penguinMood} extraMessage={penguinExtraMessage} />
 
         <div
           className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-gold-500 font-display text-sm text-white"
@@ -213,7 +238,26 @@ function Home() {
               Days Together
             </p>
           </div>
+
+          <div
+            className={`min-w-[9.5rem] rounded-2xl border px-5 py-3 text-center ${streakCardClass}`}
+          >
+            <p
+              className={`font-display text-3xl tabular-nums leading-none ${streakNumberClass}`}
+            >
+              {streak.current}
+            </p>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-plum-400 font-semibold">
+              Day Streak
+            </p>
+          </div>
         </div>
+
+        {streak.atRisk && (
+          <p className="mt-4 text-xs font-semibold text-rose-500">
+            Someone hasn't written today yet — keep the streak alive!
+          </p>
+        )}
       </section>
 
       {/* Feature cards */}
