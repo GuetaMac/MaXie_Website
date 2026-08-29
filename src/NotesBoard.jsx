@@ -274,6 +274,12 @@ export default function NotesBoard() {
       ? "var(--olw-alert)"
       : "var(--olw-ice-strong)";
 
+  // `notes` comes in newest-first. Take the newest `visibleCount`, then
+  // reverse just that slice so the list reads oldest -> newest, top to
+  // bottom, chat-style — the latest note ends up right above the input.
+  const visibleNotes = [...notes.slice(0, visibleCount)].reverse();
+  const hasOlder = notes.length > visibleCount;
+
   return (
     <div className="olw-root px-4 py-8">
       {styleBlock}
@@ -337,105 +343,111 @@ export default function NotesBoard() {
             No notes yet. You go first.
           </p>
         ) : (
-          <ul className="space-y-4 mb-8">
-            {notes.slice(0, visibleCount).map((note, i) => {
-              const isMine = note.author === username;
-              const sealedKey = reacted[note.id];
-              const rotate = i % 2 === 0 ? "-0.5deg" : "0.5deg";
-              const timeLabel = formatTime(note);
-
-              return (
-                <li
-                  key={note.id}
-                  className={`olw-note-enter rounded-2xl p-4 shadow-sm ${
-                    isMine ? "ml-10" : "mr-10"
-                  }`}
+          <>
+            {/* Older notes live further up, so the "load more" control
+                sits above the list instead of below it. */}
+            {hasOlder && (
+              <div className="text-center mb-4">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((c) => c + 15)}
+                  className="olw-btn-name px-5 py-2 rounded-full text-sm font-medium"
                   style={{
-                    backgroundColor: isMine
-                      ? "var(--olw-rose-soft)"
-                      : "var(--olw-surface)",
-                    border: isMine ? "none" : "1px solid var(--olw-rose-soft)",
-                    transform: `rotate(${rotate})`,
+                    color: "var(--olw-rose)",
+                    border: "1px solid var(--olw-rose-soft)",
+                    backgroundColor: "var(--olw-chip-bg)",
                   }}
                 >
-                  <div className="flex items-baseline justify-between mb-1">
-                    <p
-                      className="olw-script text-xl leading-none"
-                      style={{ color: "var(--olw-rose)" }}
-                    >
-                      {note.author}
-                    </p>
-                    {timeLabel && (
-                      <span className="text-[11px] opacity-50">
-                        {timeLabel}
-                      </span>
-                    )}
-                  </div>
+                  View older notes ({notes.length - visibleCount} more)
+                </button>
+              </div>
+            )}
 
-                  <p className="text-sm leading-relaxed">{note.text}</p>
+            <ul className="space-y-4 mb-8">
+              {visibleNotes.map((note, i) => {
+                const isMine = note.author === username;
+                const sealedKey = reacted[note.id];
+                const rotate = i % 2 === 0 ? "-0.5deg" : "0.5deg";
+                const timeLabel = formatTime(note);
 
-                  <div className="flex gap-2 mt-3">
-                    {REACTIONS.map((r) => {
-                      const isSealed = sealedKey === r.key;
-                      const disabled = Boolean(sealedKey);
-                      const animate = justSealed === note.id && isSealed;
+                return (
+                  <li
+                    key={note.id}
+                    className={`olw-note-enter rounded-2xl p-4 shadow-sm ${
+                      isMine ? "ml-10" : "mr-10"
+                    }`}
+                    style={{
+                      backgroundColor: isMine
+                        ? "var(--olw-rose-soft)"
+                        : "var(--olw-surface)",
+                      border: isMine
+                        ? "none"
+                        : "1px solid var(--olw-rose-soft)",
+                      transform: `rotate(${rotate})`,
+                    }}
+                  >
+                    <div className="flex items-baseline justify-between mb-1">
+                      <p
+                        className="olw-script text-xl leading-none"
+                        style={{ color: "var(--olw-rose)" }}
+                      >
+                        {note.author}
+                      </p>
+                      {timeLabel && (
+                        <span className="text-[11px] opacity-50">
+                          {timeLabel}
+                        </span>
+                      )}
+                    </div>
 
-                      let cls =
-                        "olw-react-btn text-sm px-2.5 py-1 rounded-full ";
-                      if (animate) cls += "olw-seal-pop ";
-                      else if (disabled && !isSealed) cls += "opacity-40 ";
+                    <p className="text-sm leading-relaxed">{note.text}</p>
 
-                      return (
-                        <button
-                          key={r.key}
-                          type="button"
-                          disabled={disabled}
-                          onClick={() => handleReact(note.id, r.key)}
-                          title={isSealed ? "Sealed" : r.label}
-                          className={cls}
-                          style={{
-                            backgroundColor: isSealed
-                              ? "var(--olw-gold-soft)"
-                              : "var(--olw-chip-bg)",
-                            border: `1px solid ${
-                              isSealed
-                                ? "var(--olw-gold)"
-                                : "var(--olw-rose-soft)"
-                            }`,
-                            boxShadow: isSealed
-                              ? "0 0 0 2px rgba(201,154,59,0.2)"
-                              : "none",
-                          }}
-                        >
-                          {r.emoji}{" "}
-                          {note.reactions?.[r.key] > 0
-                            ? note.reactions[r.key]
-                            : ""}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    <div className="flex gap-2 mt-3">
+                      {REACTIONS.map((r) => {
+                        const isSealed = sealedKey === r.key;
+                        const disabled = Boolean(sealedKey);
+                        const animate = justSealed === note.id && isSealed;
 
-        {notes.length > visibleCount && (
-          <div className="text-center mb-8">
-            <button
-              type="button"
-              onClick={() => setVisibleCount((c) => c + 15)}
-              className="olw-btn-name px-5 py-2 rounded-full text-sm font-medium"
-              style={{
-                color: "var(--olw-rose)",
-                border: "1px solid var(--olw-rose-soft)",
-                backgroundColor: "var(--olw-chip-bg)",
-              }}
-            >
-              View older notes ({notes.length - visibleCount} more)
-            </button>
-          </div>
+                        let cls =
+                          "olw-react-btn text-sm px-2.5 py-1 rounded-full ";
+                        if (animate) cls += "olw-seal-pop ";
+                        else if (disabled && !isSealed) cls += "opacity-40 ";
+
+                        return (
+                          <button
+                            key={r.key}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => handleReact(note.id, r.key)}
+                            title={isSealed ? "Sealed" : r.label}
+                            className={cls}
+                            style={{
+                              backgroundColor: isSealed
+                                ? "var(--olw-gold-soft)"
+                                : "var(--olw-chip-bg)",
+                              border: `1px solid ${
+                                isSealed
+                                  ? "var(--olw-gold)"
+                                  : "var(--olw-rose-soft)"
+                              }`,
+                              boxShadow: isSealed
+                                ? "0 0 0 2px rgba(201,154,59,0.2)"
+                                : "none",
+                            }}
+                          >
+                            {r.emoji}{" "}
+                            {note.reactions?.[r.key] > 0
+                              ? note.reactions[r.key]
+                              : ""}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
 
         <form onSubmit={handleSubmit} className="flex gap-2">

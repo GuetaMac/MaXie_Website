@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import FeatureCard from "../components/FeatureCard.jsx";
 import PenguinMascot from "../components/PenguinMascot.jsx";
+import SpecialDayModal from "../utils/SpecialDayModal.jsx";
 import { useStreak } from "../hooks/useStreak.js";
 import { db } from "../firebase"; // <- baguhin kung mali yung path- ganun din
 
@@ -133,6 +134,8 @@ function Home() {
 
   return (
     <div>
+      <SpecialDayModal />
+
       {/* local keyframes for the hero's ambient hearts — self-contained,
           no changes needed to index.css or tailwind.config */}
       <style>{`

@@ -35,7 +35,7 @@ export function getSpecialDay(date = new Date()) {
         icon: "💍",
         title: `Happy ${ordinal(years)} Anniversary!`,
         message:
-          "Isa taon, isa pang dahilan para mahalin kita nang lubusan. Mahal na mahal kita, bebe.",
+          "Isang taon, isa pang dahilan para mahalin kita nang lubusan. Mahal na mahal kita, bebe.",
       };
     }
   }
@@ -50,7 +50,7 @@ export function getSpecialDay(date = new Date()) {
         icon: "🤍",
         title: `Happy ${ordinal(count)} Monthsary!`,
         message:
-          "Isa na namang buwan na mas lalo kitang mamahalin. I love You!",
+          "Happy monthsaryyyy to us bb. Thank you for being there alwaysss bb. I hope this simple message and surprise conveys how much I love you!",
       };
     }
   }
