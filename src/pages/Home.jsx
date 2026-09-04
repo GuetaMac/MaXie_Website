@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import FeatureCard from "../components/FeatureCard.jsx";
 import PenguinMascot from "../components/PenguinMascot.jsx";
 import SpecialDayModal from "../utils/SpecialDayModal.jsx";
+import MoodCheckIn from "../components/MoodCheckIn.jsx";
+import SendHug from "../components/SendHug.jsx";
 import { useStreak } from "../hooks/useStreak.js";
+import { usePenguinVoice } from "../hooks/usePenguinVoice.js";
 import { db } from "../firebase"; // <- baguhin kung mali yung path- ganun din
 
 const features = [
@@ -49,6 +52,12 @@ const features = [
     title: "Our Notes",
     description: "Our little notes just for us.",
   },
+  {
+    to: "/wishlist",
+    index: "08",
+    title: "Wishlist",
+    description: "Mga gusto naming matanggap balang araw.",
+  },
 ];
 
 // Placeholder values — wire these up to real data later.
@@ -89,6 +98,11 @@ function Home() {
   const [visible, setVisible] = useState(false);
   const [reminder, setReminder] = useState(getTodaysReminder);
   const streak = useStreak();
+  const {
+    play: playPenguinVoice,
+    caption: penguinCaption,
+    isPlaying,
+  } = usePenguinVoice();
 
   useEffect(() => {
     const t = window.setTimeout(() => setVisible(true), 60);
@@ -135,6 +149,10 @@ function Home() {
   return (
     <div>
       <SpecialDayModal />
+
+      {/* Floating "send a hug/kiss" button — lives outside the fade-up
+          sections so it stays put and doesn't animate with the rest. */}
+      <SendHug />
 
       {/* local keyframes for the hero's ambient hearts — self-contained,
           no changes needed to index.css or tailwind.config */}
@@ -185,7 +203,27 @@ function Home() {
           ♥
         </span>
 
-        <PenguinMascot mood={penguinMood} extraMessage={penguinExtraMessage} />
+        {/* Penguin is now clickable — tap for a random recorded voice
+            line + a little speech bubble. Add/edit lines and audio
+            files in src/data/voiceMessages.js
+
+            NOTE: render PenguinMascot directly here, same as the
+            original code — do NOT wrap it in an extra positioning
+            <div>. PenguinMascot's own root wrapper is `absolute
+            bottom-3 right-4 ...`, positioned against this hero
+            <section> (which is `relative`). Wrapping it in another
+            `relative` div changes that positioning context and is
+            what was pushing the penguin to the top of the card
+            instead of the bottom-right corner. The caption bubble
+            is now handled inside PenguinMascot itself via the
+            voiceCaption prop. */}
+        <PenguinMascot
+          mood={penguinMood}
+          extraMessage={penguinExtraMessage}
+          onClick={playPenguinVoice}
+          disabled={isPlaying}
+          voiceCaption={penguinCaption}
+        />
 
         <div
           className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-gold-500 font-display text-sm text-white"
@@ -263,6 +301,14 @@ function Home() {
             Someone hasn't written today yet — keep the streak alive!
           </p>
         )}
+      </section>
+
+      {/* Mood check-in */}
+      <section
+        style={{ transitionDelay: "60ms" }}
+        className={`mb-8 ${fadeUp()}`}
+      >
+        <MoodCheckIn />
       </section>
 
       {/* Feature cards */}

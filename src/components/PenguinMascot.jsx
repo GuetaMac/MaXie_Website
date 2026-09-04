@@ -31,6 +31,26 @@ const penguinMessages = [
  *               "neutral" — identical to the original behavior.
  *  - extraMessage  optional streak-aware line that gets folded into
  *               the random message pool when the penguin is tapped.
+ *  - onClick    optional extra handler fired alongside the built-in
+ *               wiggle/message-bubble behavior (e.g. to also play a
+ *               voice line). The penguin's own button stays the ONLY
+ *               button — don't wrap this component in another
+ *               <button>, that creates invalid nested buttons and
+ *               throws off the layout.
+ *  - disabled   optional — disables the internal button (e.g. while
+ *               a voice line is playing).
+ *  - voiceCaption  optional string. When provided (non-empty), shows
+ *               its own little speech bubble right above the penguin.
+ *               IMPORTANT: don't wrap <PenguinMascot> in an extra
+ *               positioning <div> just to place a caption bubble next
+ *               to it — this component's root wrapper is already
+ *               `absolute` (positioned against the nearest `relative`
+ *               ancestor, normally the hero section). Adding another
+ *               `relative` div around it changes that positioning
+ *               context and is what previously made the penguin jump
+ *               to the top of the section instead of staying in the
+ *               corner. Pass the caption text in via this prop instead
+ *               and let PenguinMascot render it internally.
  */
 function PenguinMascot({
   size = 52,
@@ -38,6 +58,9 @@ function PenguinMascot({
   bubbleSide = "right",
   mood = "neutral",
   extraMessage,
+  onClick,
+  disabled = false,
+  voiceCaption,
 }) {
   const [message, setMessage] = useState(penguinMessages[0]);
   const [showMessage, setShowMessage] = useState(false);
@@ -54,6 +77,11 @@ function PenguinMascot({
 
     window.setTimeout(() => setIsWiggling(false), 500);
     window.setTimeout(() => setShowMessage(false), 2600);
+
+    // Let parents (e.g. Home page voice-line button) hook into the
+    // same tap without needing to wrap this component in another
+    // <button>.
+    onClick?.();
   }
 
   const bubbleAlign = bubbleSide === "left" ? "left-0" : "right-0";
@@ -96,11 +124,22 @@ function PenguinMascot({
       )}
 
       <div className="relative inline-block">
+        {voiceCaption && (
+          <div
+            className={`absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[110%] whitespace-nowrap rounded-2xl border border-gold-400 bg-white px-4 py-2 shadow-lg z-10`}
+          >
+            <p className="font-body text-sm font-medium text-plum-700">
+              {voiceCaption}
+            </p>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handleClick}
+          disabled={disabled}
           aria-label="Say hi to the penguin"
-          className={`block transition-transform duration-200 hover:scale-110 active:scale-95 ${
+          className={`block transition-transform duration-200 hover:scale-110 active:scale-95 disabled:cursor-default ${
             isWiggling ? "animate-wiggle" : idleAnimClass
           }`}
           style={
