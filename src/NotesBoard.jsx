@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import {
   collection,
@@ -78,6 +78,22 @@ export default function NotesBoard() {
 
   // Shared with the Home page — single Firestore listener + streak calc.
   const { notes, loading, ...streak } = useStreak();
+
+  // Messenger-style auto-scroll: land on the newest note (right above the
+  // composer) whenever notes first load, and again whenever a new note
+  // comes in — without the user having to scroll down manually.
+  const bottomRef = useRef(null);
+  const hasScrolledOnceRef = useRef(false);
+  const latestNoteId = notes[0]?.id;
+
+  useEffect(() => {
+    if (loading || !bottomRef.current) return;
+    bottomRef.current.scrollIntoView({
+      behavior: hasScrolledOnceRef.current ? "smooth" : "auto",
+      block: "end",
+    });
+    hasScrolledOnceRef.current = true;
+  }, [loading, latestNoteId]);
 
   const chooseName = (name) => {
     localStorage.setItem(NAME_KEY, name);
@@ -470,6 +486,11 @@ export default function NotesBoard() {
             Send
           </button>
         </form>
+
+        {/* Scroll anchor — keeps the view pinned to the newest note (and
+            the composer right below it) on open and whenever a note
+            arrives, Messenger-style, so no manual scrolling is needed. */}
+        <div ref={bottomRef} />
       </div>
     </div>
   );
