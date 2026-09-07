@@ -11,6 +11,8 @@ const MOODS = [
   { key: "missing-you", label: "Missing you", dot: "bg-blush-400" },
 ];
 
+const CUSTOM_MOOD_MAX_LEN = 40;
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -18,16 +20,27 @@ function todayKey() {
   ).padStart(2, "0")}`;
 }
 
+// Preset moods are stored by key ("great", "okay"...); a typed-in mood is
+// stored with its own raw text instead, so this just figures out which one
+// we're dealing with and returns something displayable either way.
+function moodLabel(mood) {
+  if (!mood) return null;
+  const preset = MOODS.find((m) => m.key === mood);
+  return preset ? preset.label : mood;
+}
+
 /**
- * Home-page widget. Each person picks one mood word per day; both
- * see each other's pick update live, same real-time pattern as your
- * Notes feature. Docs live at moods/{name}_{YYYY-MM-DD} — change the
- * doc-id shape here if you'd rather nest it differently.
+ * Home-page widget. Each person picks one mood word per day (or types
+ * their own); both see each other's pick update live, same real-time
+ * pattern as your Notes feature. Docs live at moods/{name}_{YYYY-MM-DD}
+ * — change the doc-id shape here if you'd rather nest it differently.
  */
 function MoodCheckIn() {
   const { me, partner } = useIdentity();
   const [myMood, setMyMood] = useState(null);
   const [partnerMood, setPartnerMood] = useState(null);
+  const [customText, setCustomText] = useState("");
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     if (!me) return;
@@ -35,6 +48,10 @@ function MoodCheckIn() {
       doc(db, "moods", `${me}_${todayKey()}`),
       (snap) => {
         setMyMood(snap.exists() ? snap.data().mood : null);
+      },
+      (err) => {
+        console.error("MoodCheckIn: failed to read my mood doc:", err);
+        setSaveError(`Couldn't load your mood: ${err.message}`);
       },
     );
     return () => unsub();
@@ -47,24 +64,56 @@ function MoodCheckIn() {
       (snap) => {
         setPartnerMood(snap.exists() ? snap.data().mood : null);
       },
+      (err) => {
+        console.error("MoodCheckIn: failed to read partner mood doc:", err);
+      },
     );
     return () => unsub();
   }, [partner]);
 
-  async function pickMood(key) {
-    if (!me) return;
-    setMyMood(key);
-    await setDoc(doc(db, "moods", `${me}_${todayKey()}`), {
-      mood: key,
-      name: me,
-      date: todayKey(),
-      updatedAt: serverTimestamp(),
-    });
+  async function saveMood(moodValue) {
+    if (!me || !moodValue) return;
+    setSaveError(null);
+    setMyMood(moodValue); // optimistic — reverted below if the write fails
+    try {
+      await setDoc(doc(db, "moods", `${me}_${todayKey()}`), {
+        mood: moodValue,
+        name: me,
+        date: todayKey(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      // This is the important part: previously a failed write here (e.g.
+      // rejected by Firestore security rules) failed silently, so a typed
+      // mood could look like it saved locally but never reach Firestore
+      // — and never reach your partner's screen.
+      console.error("MoodCheckIn: setDoc failed:", err);
+      setSaveError(
+        err.code === "permission-denied"
+          ? "Hindi na-save — blocked by Firestore rules."
+          : `Hindi na-save: ${err.message}`,
+      );
+      setMyMood(null);
+    }
+  }
+
+  function pickMood(key) {
+    setCustomText("");
+    saveMood(key);
+  }
+
+  function submitCustomMood(e) {
+    e.preventDefault();
+    const trimmed = customText.trim();
+    if (!trimmed) return;
+    saveMood(trimmed.slice(0, CUSTOM_MOOD_MAX_LEN));
+    setCustomText("");
   }
 
   if (!me) return <IdentityPicker />;
 
-  const partnerMoodLabel = MOODS.find((m) => m.key === partnerMood)?.label;
+  const partnerMoodLabel = moodLabel(partnerMood);
+  const myMoodIsPreset = MOODS.some((m) => m.key === myMood);
 
   return (
     <section className="rounded-3xl border border-rose-100 bg-white px-6 py-6 sm:px-8 dark:border-plum-500/40 dark:bg-plum-700">
@@ -93,6 +142,39 @@ function MoodCheckIn() {
           </button>
         ))}
       </div>
+
+      <form
+        onSubmit={submitCustomMood}
+        className="mt-3 flex items-center gap-2"
+      >
+        <input
+          type="text"
+          value={customText}
+          onChange={(e) => setCustomText(e.target.value)}
+          maxLength={CUSTOM_MOOD_MAX_LEN}
+          placeholder="or type your own mood..."
+          className="flex-1 rounded-full border border-rose-100 bg-transparent px-4 py-2 font-body text-sm text-plum-700 placeholder:text-plum-300 focus:border-gold-400 focus:outline-none dark:border-plum-500/40 dark:text-blush-50 dark:placeholder:text-blush-200/50"
+        />
+        <button
+          type="submit"
+          disabled={!customText.trim()}
+          className="rounded-full border border-gold-400 bg-gold-300/30 px-4 py-2 font-body text-sm text-plum-700 transition-colors disabled:cursor-not-allowed disabled:opacity-40 dark:border-gold-500/40 dark:bg-gold-500/10 dark:text-blush-50"
+        >
+          Set
+        </button>
+      </form>
+
+      {saveError && (
+        <p className="mt-2 font-body text-xs font-semibold text-rose-500 dark:text-rose-300">
+          {saveError}
+        </p>
+      )}
+
+      {myMood && !myMoodIsPreset && (
+        <p className="mt-2 font-body text-xs text-plum-400 dark:text-blush-200/70">
+          Today you're feeling: {myMood}
+        </p>
+      )}
 
       {partner && (
         <p className="mt-4 font-body text-sm text-plum-400 dark:text-blush-200/70">

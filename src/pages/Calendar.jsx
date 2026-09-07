@@ -141,6 +141,28 @@ function monthsBetween(a, b) {
   );
 }
 
+// Proper English ordinal suffix: 1st, 2nd, 3rd, 4th... 11th, 12th, 13th
+// (11/12/13 are always "th" even though they end in 1/2/3), 21st, 22nd, 23rd...
+function ordinal(n) {
+  if (n === 1) return "First";
+
+  const remainder100 = n % 100;
+  if (remainder100 >= 11 && remainder100 <= 13) {
+    return `${n}th`;
+  }
+
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
 function useNow() {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -248,10 +270,8 @@ function Calendar() {
     anniversary.getFullYear() - START_DATE.getFullYear();
   const monthsaryNumber = monthsBetween(START_DATE, monthsary);
 
-  const anniversaryOrdinal =
-    anniversaryNumber === 1 ? "First" : `${anniversaryNumber}th`;
-  const monthsaryOrdinal =
-    monthsaryNumber === 1 ? "First" : `${monthsaryNumber}th`;
+  const anniversaryOrdinal = ordinal(anniversaryNumber);
+  const monthsaryOrdinal = ordinal(monthsaryNumber);
 
   const weeks = useMemo(() => {
     const firstOfMonth = new Date(year, month, 1);
