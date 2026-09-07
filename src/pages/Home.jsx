@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import FeatureCard from "../components/FeatureCard.jsx";
 import PenguinMascot from "../components/PenguinMascot.jsx";
 import SpecialDayModal from "../utils/SpecialDayModal.jsx";
+import MorningMessagePopup from "../components/MorningMessagePopup.jsx";
 import MoodCheckIn from "../components/MoodCheckIn.jsx";
 import SendHug from "../components/SendHug.jsx";
 import { useStreak } from "../hooks/useStreak.js";
@@ -149,6 +150,12 @@ function Home() {
   return (
     <div>
       <SpecialDayModal />
+
+      {/* Daily "good morning" popup — one message a day, shown once
+          per calendar day right when the app is opened. Data lives
+          in src/data/morningMessages.js; logic + the once-a-day
+          localStorage check live inside the component itself. */}
+      <MorningMessagePopup />
 
       {/* Floating "send a hug/kiss" button — lives outside the fade-up
           sections so it stays put and doesn't animate with the rest. */}
