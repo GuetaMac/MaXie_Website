@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { plantTulip } from "../utils/garden.js";
 
 // The two people whose notes count toward the streak.
 export const STREAK_USERS = ["Macky", "Trixie"];
+
+const STREAK_TULIP_KEY = "olw_streak_tulip_planted_on";
 
 function toDateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -98,6 +101,30 @@ export function useStreak() {
   }, []);
 
   const streak = useMemo(() => computeStreak(notes), [notes]);
+
+  // Plant a tulip the moment today's streak gets secured — guarded by
+  // localStorage so it only happens once per device per day, even
+  // though this hook is called from both Home and Notes at once (and
+  // fires again on every snapshot update).
+  useEffect(() => {
+    if (!streak.securedToday) return;
+    const todayKey = toDateKey(new Date());
+    let plantedOn = null;
+    try {
+      plantedOn = localStorage.getItem(STREAK_TULIP_KEY);
+    } catch {
+      // localStorage unavailable — just skip the dedupe guard below.
+    }
+    if (plantedOn === todayKey) return;
+
+    try {
+      localStorage.setItem(STREAK_TULIP_KEY, todayKey);
+    } catch {
+      // If we can't persist the guard, still plant once for this
+      // render rather than silently doing nothing.
+    }
+    plantTulip("streak", "Macky & Trixie");
+  }, [streak.securedToday]);
 
   return { ...streak, notes, loading };
 }

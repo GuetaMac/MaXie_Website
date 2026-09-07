@@ -59,6 +59,12 @@ const features = [
     title: "Wishlist",
     description: "Mga gusto naming matanggap balang araw.",
   },
+  {
+    to: "/our-garden",
+    index: "09",
+    title: "Our Garden",
+    description: "Isang tulip kada note, hug, o mood check-in namin.",
+  },
 ];
 
 // Placeholder values — wire these up to real data later.

@@ -3,6 +3,7 @@ import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useIdentity } from "../hooks/useIdentity.js";
 import IdentityPicker from "./IdentityPicker.jsx";
+import { plantTulip } from "../utils/garden.js";
 
 const MOODS = [
   { key: "great", label: "Great", dot: "bg-gold-400" },
@@ -73,6 +74,11 @@ function MoodCheckIn() {
 
   async function saveMood(moodValue) {
     if (!me || !moodValue) return;
+    // Capture this BEFORE we optimistically overwrite myMood below, so we
+    // only plant a tulip on the first check-in of the day — changing your
+    // mind later today (picking a different mood) won't plant another one.
+    const isFirstCheckInToday = !myMood;
+
     setSaveError(null);
     setMyMood(moodValue); // optimistic — reverted below if the write fails
     try {
@@ -82,6 +88,10 @@ function MoodCheckIn() {
         date: todayKey(),
         updatedAt: serverTimestamp(),
       });
+
+      if (isFirstCheckInToday) {
+        plantTulip("mood", me);
+      }
     } catch (err) {
       // This is the important part: previously a failed write here (e.g.
       // rejected by Firestore security rules) failed silently, so a typed
