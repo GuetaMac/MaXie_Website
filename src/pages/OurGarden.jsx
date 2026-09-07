@@ -214,7 +214,7 @@ function OurGarden() {
         </h1>
         <p className="mt-3 font-body text-plum-400 max-w-md dark:text-blush-200/80">
           Bawat note, hug, mood check-in, at streak ay nagpapatubo ng bagong
-          tulip dito. Tumataas habang tumatagal kayo.
+          tulip dito. Tumataas habang tumatagal tayo.
         </p>
 
         {tulips.length > 0 && (
