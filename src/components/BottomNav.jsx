@@ -20,6 +20,7 @@ const moreLinks = [
   { to: "/mini-games", label: "Mini Games" },
   { to: "/songs", label: "Our Playlist" },
   { to: "/wishlist", label: "Wishlist" },
+  { to: "/our-pet", label: "Our Pet 🐾" },
 ];
 
 function HomeIcon(props) {
