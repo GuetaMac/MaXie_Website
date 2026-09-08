@@ -26,6 +26,11 @@ const TYPES = {
  * "seen" flag in Firestore, so they PERSIST until the recipient
  * actually opens the app and sees them — not just while both of you
  * happen to be online at the same time.
+ *
+ * Positioning note: both the FAB and the "sent" confirmation sit above
+ * the app's fixed bottom tab bar (BottomNav.jsx) plus the device's
+ * safe-area inset, so they never overlap the "More" tab or get clipped
+ * behind the iPhone home indicator.
  */
 function SendHug() {
   const { me, partner } = useIdentity();
@@ -100,7 +105,7 @@ function SendHug() {
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+      <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-5 z-40 flex flex-col items-end gap-2">
         {open && (
           <div className="flex flex-col gap-2 rounded-2xl border border-rose-100 bg-white p-2 shadow-lg dark:border-plum-500/40 dark:bg-plum-700">
             {Object.entries(TYPES).map(([key, t]) => (
@@ -134,7 +139,7 @@ function SendHug() {
 
       {/* Confirmation for the SENDER — shows right after tapping send */}
       {sentConfirm && (
-        <div className="fixed bottom-24 right-5 z-50 rounded-2xl border border-rose-200 bg-white px-5 py-3 shadow-lg dark:border-plum-500/40 dark:bg-plum-700">
+        <div className="fixed bottom-[calc(10.25rem+env(safe-area-inset-bottom))] right-5 z-50 rounded-2xl border border-rose-200 bg-white px-5 py-3 shadow-lg dark:border-plum-500/40 dark:bg-plum-700">
           <p className="font-body text-sm font-medium text-plum-700 dark:text-blush-50">
             Sent {sentConfirm === "kiss" ? "a kiss" : "a hug"} to {partner}{" "}
             {TYPES[sentConfirm].symbol}

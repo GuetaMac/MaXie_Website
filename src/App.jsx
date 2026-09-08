@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar.jsx";
+import TopBar from "./components/TopBar.jsx";
+import BottomNav from "./components/BottomNav.jsx";
 import Home from "./pages/Home.jsx";
 import OurStory from "./pages/OurStory.jsx";
 import Memories from "./pages/Memories.jsx";
@@ -18,8 +19,10 @@ function App() {
     <PasscodeGate answer="07302026" names="Macky & Trixie" storageKey={null}>
       <div className="min-h-screen flex flex-col font-body">
         <SpecialDaySurprise />
-        <Navbar />
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
+        <TopBar />
+        {/* pb-24 clears the fixed bottom tab bar so the last bit of
+            content on every page never sits underneath it. */}
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-10 pb-24">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/our-story" element={<OurStory />} />
@@ -32,10 +35,12 @@ function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/our-garden" element={<OurGarden />} />
           </Routes>
+
+          <p className="text-center font-body text-xs text-plum-400 pt-10 dark:text-blush-200/60">
+            made with 💗 for us
+          </p>
         </main>
-        <footer className="text-center font-body text-xs text-plum-400 py-6 dark:text-blush-200/60">
-          made with 💗 for us
-        </footer>
+        <BottomNav />
       </div>
     </PasscodeGate>
   );
