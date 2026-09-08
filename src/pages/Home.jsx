@@ -63,7 +63,7 @@ const features = [
     to: "/our-garden",
     index: "09",
     title: "Our Garden",
-    description: "Isang tulip kada note, hug, o mood check-in namin.",
+    description: "Isang bulaklak kada araw na na-secure niyo yung streak.",
   },
 ];
 

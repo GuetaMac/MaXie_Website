@@ -9,7 +9,6 @@ import {
   increment,
 } from "firebase/firestore";
 import { useStreak, STREAK_USERS } from "./hooks/useStreak.js";
-import { plantTulip } from "./utils/garden.js";
 
 const REACTIONS = [
   { key: "heart", emoji: "❤️", label: "Love you" },
@@ -111,11 +110,6 @@ export default function NotesBoard() {
       reactions: { heart: 0, smile: 0, teary: 0 },
     });
     setText("");
-
-    // Bagong note = bagong tulip sa Our Garden. Hindi natin ino-await
-    // dito para hindi ma-delay yung pag-send ng note kung sakaling
-    // magtagal o mag-fail yung pagtanim ng tulip.
-    plantTulip("note", username);
   };
 
   const handleReact = async (noteId, key) => {

@@ -11,7 +11,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useIdentity } from "../hooks/useIdentity.js";
-import { plantTulip } from "../utils/garden.js";
 
 const TYPES = {
   hug: { label: "Hug", symbol: "○" },
@@ -88,9 +87,6 @@ function SendHug() {
       });
       setSentConfirm(type);
       window.setTimeout(() => setSentConfirm(null), 2500);
-
-      // Every hug or kiss sent plants a new tulip in Our Garden.
-      plantTulip("hug", me);
     } catch (err) {
       console.error("SendHug: failed to send", err);
     }

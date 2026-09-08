@@ -18,14 +18,18 @@ export const TULIP_TYPES = {
  *
  * @param {"note"|"hug"|"mood"|"streak"|"morning"} type
  * @param {string} author - "Macky" o "Trixie"
+ * @param {object} extra - optional extra fields to store on the doc,
+ *   e.g. { streakDay: 14 } so Our Garden can color/size milestone
+ *   flowers based on how long the streak was when it was planted.
  */
-export async function plantTulip(type, author) {
+export async function plantTulip(type, author, extra = {}) {
   const safeType = TULIP_TYPES[type] ? type : "note";
   try {
     await addDoc(collection(db, "gardenTulips"), {
       type: safeType,
       author: author || "unknown",
       createdAt: serverTimestamp(),
+      ...extra,
     });
   } catch (err) {
     // Hindi natin gustong sirain yung buong interaction (e.g. hindi

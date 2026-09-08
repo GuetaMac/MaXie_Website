@@ -123,7 +123,7 @@ export function useStreak() {
       // If we can't persist the guard, still plant once for this
       // render rather than silently doing nothing.
     }
-    plantTulip("streak", "Macky & Trixie");
+    plantTulip("streak", "Macky & Trixie", { streakDay: streak.current });
   }, [streak.securedToday]);
 
   return { ...streak, notes, loading };
