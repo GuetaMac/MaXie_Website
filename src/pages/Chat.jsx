@@ -126,8 +126,8 @@ export default function Chat() {
         <span className="page-eyebrow text-sm tracking-[0.3em]">Ask Us</span>
         <h1 className="mt-2 text-4xl sm:text-5xl">Ask About Us</h1>
         <p className="mx-auto mt-3 max-w-md text-base text-plum-400 sm:mx-0 sm:text-lg dark:text-blush-200/80">
-          Magtanong tungkol sa relasyon namin — batay sa Our Story at sa mga
-          notes namin sa isa't isa.
+          Magtanong tungkol sa relasyon natin — batay sa Our Story at sa mga
+          notes natin sa isa't isa.
         </p>
       </div>
 
@@ -138,14 +138,14 @@ export default function Chat() {
 
         {!context && !contextError && (
           <p className="text-center text-sm text-plum-400 dark:text-blush-200/80">
-            Kinukuha pa yung mga alaala namin...
+            Kinukuha pa yung mga alaala natin...
           </p>
         )}
 
         {context && messages.length === 0 && (
           <p className="text-center text-sm text-plum-400 dark:text-blush-200/80">
-            Handa na akong sagutin ang mga tanong mo tungkol sa amin. Subukan
-            mo!
+            Handa na akong sagutin ang mga tanong mo tungkol sa atin. Tanong na
+            ikaw bb!
           </p>
         )}
 
