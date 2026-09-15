@@ -10,7 +10,7 @@ const loveQuizQuestions = [
     correctIndex: 0,
   },
   {
-    question: "What was our first date?",
+    question: "What was our first adate?",
     options: ["Movie night", "Coffee date", "Dinner date", "Mall date"],
     correctIndex: 1,
   },

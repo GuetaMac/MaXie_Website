@@ -11,6 +11,7 @@ const primaryLinks = [
   { to: "/notes", label: "Notes", icon: NotesIcon },
   { to: "/calendar", label: "Calendar", icon: CalendarIcon },
   { to: "/our-garden", label: "Garden", icon: GardenIcon },
+  { to: "/chat", label: "Chat", icon: ChatIcon },
 ];
 
 const moreLinks = [
@@ -88,6 +89,23 @@ function GardenIcon(props) {
       <path d="M12 21v-8" />
       <path d="M12 13c0-4 -3-6-7-6 0 4 3 6 7 6Z" />
       <path d="M12 13c0-5 3-8 8-8 0 5 -3 8 -8 8Z" />
+    </svg>
+  );
+}
+
+function ChatIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4.5 4V16H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z" />
+      <path d="M8 10h8M8 13h5" />
     </svg>
   );
 }
