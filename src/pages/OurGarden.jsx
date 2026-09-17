@@ -62,12 +62,56 @@ function paletteFor(tulip) {
   return getStreakTier(tulip.streakDay);
 }
 
-// How many flowers sit in one "row" of the tree before a new, taller row
-// stacks above it. Instead of splitting into separate bushes side by
-// side, the whole garden is now one tree that grows upward in layers as
-// more flowers are planted.
-const ROW_SIZE = 7;
-const ROW_HEIGHT = 92;
+// --- Watering / wilting -----------------------------------------------
+// A flower is "watered" whenever wateredAt gets touched (defaults to
+// createdAt for flowers that predate this feature). How long ago that
+// was decides which of three states it's in. This is purely visual —
+// nothing ever gets deleted, so a neglected flower just looks sad until
+// someone waters it again.
+const WATER_STAGES = {
+  fresh: { saturate: 1, brightness: 1, droop: 0, opacity: 1 },
+  thirsty: { saturate: 0.72, brightness: 0.95, droop: 6, opacity: 0.92 },
+  wilted: { saturate: 0.4, brightness: 0.82, droop: 16, opacity: 0.8 },
+};
+
+function daysSince(tsLike) {
+  const ms = tsLike?.toDate ? tsLike.toDate().getTime() : null;
+  if (ms == null) return 0;
+  return (Date.now() - ms) / 86400000;
+}
+
+function getWaterState(tulip) {
+  const days = daysSince(tulip.wateredAt || tulip.createdAt);
+  if (days >= 6) return "wilted";
+  if (days >= 3) return "thirsty";
+  return "fresh";
+}
+
+// How many flowers sit in one "row" (ring) of the tree before a new,
+// taller ring stacks above it.
+const ROW_SIZE = 5;
+
+// A single tree only grows up to MAX_ROWS_PER_TREE rings tall — after
+// that it's "full," and any further flowers start a brand new tree
+// next to it instead of stacking the same tree even higher. This is
+// what keeps the garden from turning into one impossibly tall trunk as
+// more flowers get planted over time — it grows sideways in plots
+// instead, each one capped at the same comfortable height.
+const MAX_ROWS_PER_TREE = 3;
+const MAX_PER_TREE = ROW_SIZE * MAX_ROWS_PER_TREE;
+
+// Vertical rise per ring is unbounded on purpose — the SVG's viewBox
+// height grows to match, so the tree just gets taller, which is fine.
+// Horizontal spread is capped (MAX_HORIZ) so a ring can NEVER push a
+// flower past the edge of the canvas — that unbounded horizontal
+// growth was what made flowers fly off past the visible area and made
+// stems look like they were crossing everywhere.
+const BASE_RISE = 85;
+const ROW_RISE = 85;
+const BASE_HORIZ = 85;
+const HORIZ_STEP = 16;
+const MAX_HORIZ = 130;
+const CURVE_DROP = 14;
 
 const VB_W = 300;
 const BASE_X = 150;
@@ -82,22 +126,42 @@ function hashString(str) {
   return Math.abs(hash);
 }
 
-function formatDate(tulip) {
-  if (!tulip.createdAt?.toDate) return "";
+// Splits the full flower list into fixed-size plots (oldest flowers
+// first, same as before) — each plot renders as its own capped-height
+// tree, so the garden expands sideways in plots instead of upward
+// forever.
+function chunkIntoPlots(tulips) {
+  const plots = [];
+  for (let i = 0; i < tulips.length; i += MAX_PER_TREE) {
+    plots.push(tulips.slice(i, i + MAX_PER_TREE));
+  }
+  return plots;
+}
+
+function formatDate(tsLike) {
+  if (!tsLike?.toDate) return "";
   try {
     return new Intl.DateTimeFormat("en-PH", {
       month: "short",
       day: "numeric",
-    }).format(tulip.createdAt.toDate());
+    }).format(tsLike.toDate());
   } catch {
     return "";
   }
 }
 
-// Fans every flower in the tree out from one shared base point, in rows:
-// the first ROW_SIZE flowers form the innermost arc, the next ROW_SIZE
-// form a taller arc above/around that one, and so on — so the tree
-// keeps growing upward instead of the row getting infinitely wide.
+// Fans every flower in the tree out from one shared base point, in
+// rings: the first ROW_SIZE flowers form the innermost ring, the next
+// ROW_SIZE form a taller ring above it, and so on. Horizontal position
+// and vertical rise are calculated SEPARATELY on purpose:
+//   - horizSpread is clamped to MAX_HORIZ, so no ring, no matter how
+//     high up the tree grows, can ever push a flower past the edge of
+//     the 300-wide canvas.
+//   - rise grows every ring with no cap, but that's safe because the
+//     SVG's viewBox height (below) grows by the same amount, so the
+//     tree simply gets taller — it never has to squeeze sideways.
+// This is what keeps rings from ever overflowing off-canvas or their
+// stems crossing wildly, no matter how many flowers get planted.
 function layoutFlowers(tulips) {
   const rows = [];
   for (let i = 0; i < tulips.length; i += ROW_SIZE) {
@@ -107,18 +171,20 @@ function layoutFlowers(tulips) {
   const positions = [];
   rows.forEach((row, rowIndex) => {
     const n = row.length;
-    const rowBaseLength = 96 + rowIndex * ROW_HEIGHT * 0.62;
+    const rise = BASE_RISE + rowIndex * ROW_RISE;
+    const horizSpread = Math.min(MAX_HORIZ, BASE_HORIZ + rowIndex * HORIZ_STEP);
     row.forEach((tulip, i) => {
       const t = n > 1 ? i / (n - 1) : 0.5;
-      const angleDeg = -56 + t * 112;
-      const angleRad = (angleDeg * Math.PI) / 180;
-      const jitter = (hashString(tulip.id) % 21) - 10;
-      const length = rowBaseLength - Math.abs(angleDeg) * 0.45 + jitter;
-      const topX = BASE_X + Math.sin(angleRad) * length;
-      const topY = BASE_Y - Math.cos(angleRad) * length;
-      const controlX =
-        BASE_X + Math.sin(angleRad) * length * 0.5 + Math.cos(angleRad) * 10;
-      const controlY = BASE_Y - Math.cos(angleRad) * length * 0.5;
+      const t2 = (t - 0.5) * 2; // -1 .. 1, position within the ring
+      const jitterX = (hashString(`${tulip.id}x`) % 11) - 5;
+      const jitterY = (hashString(`${tulip.id}y`) % 9) - 4;
+      const topX = BASE_X + t2 * horizSpread + jitterX;
+      // Ends of each ring droop down slightly (CURVE_DROP) so the
+      // ring reads as a gentle fan/arc rather than a flat line.
+      const topY = BASE_Y - rise + Math.abs(t2) * CURVE_DROP + jitterY;
+      const controlX = BASE_X + (topX - BASE_X) * 0.55;
+      const controlY =
+        BASE_Y - (BASE_Y - topY) * 0.6 + (t2 > 0 ? 8 : t2 < 0 ? -8 : 0);
       positions.push({
         tulip,
         topX,
@@ -131,7 +197,8 @@ function layoutFlowers(tulips) {
   });
 
   const numRows = rows.length;
-  const minY = numRows > 1 ? -(ROW_HEIGHT * (numRows - 1)) : 0;
+  const maxRise = numRows > 0 ? BASE_RISE + (numRows - 1) * ROW_RISE : 0;
+  const minY = -(maxRise + CURVE_DROP + 40);
   const vbHeight = BASE_Y + 25 - minY;
 
   return {
@@ -142,17 +209,18 @@ function layoutFlowers(tulips) {
   };
 }
 
-function Flower({ pos, palette, active, onToggle, swayDuration }) {
+function Flower({ pos, palette, waterState, active, onToggle, swayDuration }) {
   const { topX: cx, topY: cy } = pos;
   const angles = [-58, -29, 0, 29, 58];
   const scale = palette.scale || 1;
+  const stage = WATER_STAGES[waterState];
 
   return (
     <g
       onClick={onToggle}
       role="button"
       tabIndex={0}
-      aria-label="Tulip"
+      aria-label={`Tulip (${waterState})`}
       style={{ cursor: "pointer" }}
     >
       <g
@@ -178,9 +246,17 @@ function Flower({ pos, palette, active, onToggle, swayDuration }) {
             strokeLinecap="round"
           />
 
+          {/* Droop is a small rotation of the whole bloom around the
+              point where the stem meets it — the sadder the flower,
+              the more it tips forward, on top of getting duller. */}
           <g
-            transform={`scale(${scale})`}
-            style={{ transformOrigin: `${cx}px ${cy}px` }}
+            transform={`scale(${scale}) rotate(${stage.droop} ${cx / scale} ${cy / scale})`}
+            style={{
+              transformOrigin: `${cx}px ${cy}px`,
+              filter: `saturate(${stage.saturate}) brightness(${stage.brightness})`,
+              opacity: stage.opacity,
+              transition: "filter 0.6s ease, opacity 0.6s ease",
+            }}
           >
             <g
               className={`og-bloom${active ? " og-pulse" : ""}`}
@@ -240,6 +316,18 @@ function Flower({ pos, palette, active, onToggle, swayDuration }) {
                   fill="#F2A93B"
                 />
               ))}
+
+              {waterState !== "fresh" && (
+                <text
+                  x={cx}
+                  y={cy - 26}
+                  textAnchor="middle"
+                  fontSize="11"
+                  style={{ pointerEvents: "none" }}
+                >
+                  {waterState === "wilted" ? "🥀" : "💧"}
+                </text>
+              )}
             </g>
           </g>
         </g>
@@ -293,8 +381,8 @@ function GrassBlades({ seed }) {
   );
 }
 
-// The whole garden is now a single tree — every planted (streak) flower
-// grows from one shared base, stacking into taller rows as the count
+// The whole garden is one tree — every planted (streak) flower grows
+// from one shared base, stacking into taller, wider rows as the count
 // goes up, instead of splitting off into separate side-by-side bushes.
 function GardenTree({ tulips, activeId, onToggle }) {
   const { positions, viewBox, minY, vbHeight } = useMemo(
@@ -363,6 +451,7 @@ function GardenTree({ tulips, activeId, onToggle }) {
             key={pos.tulip.id}
             pos={pos}
             palette={paletteFor(pos.tulip)}
+            waterState={getWaterState(pos.tulip)}
             active={activeId === pos.tulip.id}
             onToggle={() => onToggle(pos.tulip.id)}
             swayDuration={3.6 + (hashString(pos.tulip.id) % 12) * 0.08}
@@ -370,29 +459,46 @@ function GardenTree({ tulips, activeId, onToggle }) {
         ))}
       </svg>
 
-      {positions.map((pos) =>
-        activeId === pos.tulip.id ? (
+      {positions.map((pos) => {
+        if (activeId !== pos.tulip.id) return null;
+        const waterState = getWaterState(pos.tulip);
+        const wateredLabel = formatDate(
+          pos.tulip.wateredAt || pos.tulip.createdAt,
+        );
+        return (
           <div
             key={pos.tulip.id}
-            className="pointer-events-none absolute z-10 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl border border-gold-400/40 bg-plum-800 px-3 py-2 text-xs font-semibold text-blush-50 shadow-lg"
+            className="pointer-events-none absolute z-10 w-max max-w-[11rem] -translate-x-1/2 -translate-y-full rounded-2xl border border-gold-400/40 bg-plum-800 px-3 py-2 text-xs font-semibold text-blush-50 shadow-lg"
             style={{
               left: `${(pos.topX / VB_W) * 100}%`,
               top: `${((pos.topY - minY) / vbHeight) * 100}%`,
               marginTop: "-8px",
             }}
           >
-            {pos.tulip.author} · {getStreakTier(pos.tulip.streakDay).label}
-            {formatDate(pos.tulip) ? ` · ${formatDate(pos.tulip)}` : ""}
+            <div>
+              {pos.tulip.author} · {getStreakTier(pos.tulip.streakDay).label}
+              {formatDate(pos.tulip.createdAt)
+                ? ` · ${formatDate(pos.tulip.createdAt)}`
+                : ""}
+            </div>
+            <div className="mt-1 text-blush-200/80">
+              {waterState === "fresh" && "Sariwa 🌸"}
+              {waterState === "thirsty" &&
+                `Nauhaw na${wateredLabel ? ` · last watered ${wateredLabel}` : ""}`}
+              {waterState === "wilted" &&
+                `Nalanta na 🥀${wateredLabel ? ` · last watered ${wateredLabel}` : ""}`}
+            </div>
           </div>
-        ) : null,
-      )}
+        );
+      })}
     </div>
   );
 }
 
 function OurGarden() {
-  const { tulips: allTulips, loading } = useGarden();
+  const { tulips: allTulips, loading, waterAllTulips } = useGarden();
   const [activeId, setActiveId] = useState(null);
+  const [watering, setWatering] = useState(false);
 
   // Only streak flowers grow on the tree now — older one-off plantings
   // (hug / note / mood) from before the garden went streak-only are
@@ -401,6 +507,8 @@ function OurGarden() {
     () => allTulips.filter((t) => t.type === "streak"),
     [allTulips],
   );
+
+  const plots = useMemo(() => chunkIntoPlots(tulips), [tulips]);
 
   const counts = tulips.reduce((acc, t) => {
     const tier = getStreakTier(t.streakDay);
@@ -412,8 +520,31 @@ function OurGarden() {
     return acc;
   }, {});
 
+  const wiltedCount = tulips.filter(
+    (t) => getWaterState(t) === "wilted",
+  ).length;
+  const needsWaterIds = tulips
+    .filter((t) => getWaterState(t) !== "fresh")
+    .map((t) => t.id);
+
   function toggle(id) {
     setActiveId((cur) => (cur === id ? null : id));
+  }
+
+  async function handleWaterAll() {
+    if (needsWaterIds.length === 0 || watering) return;
+    if (typeof waterAllTulips !== "function") {
+      console.warn(
+        "waterAllTulips(ids) is not implemented in useGarden.js yet — see the note below the component.",
+      );
+      return;
+    }
+    setWatering(true);
+    try {
+      await waterAllTulips(needsWaterIds);
+    } finally {
+      setWatering(false);
+    }
   }
 
   return (
@@ -484,11 +615,12 @@ function OurGarden() {
         </h1>
         <p className="mt-3 font-body text-plum-400 max-w-md dark:text-blush-200/80">
           Isang bagong bulaklak kada araw na na-secure niyo yung streak — mas
-          gumaganda at lumalaki pa yung kulay habang tumatagal.
+          gumaganda at lumalaki pa yung kulay habang tumatagal. Pero kailangan
+          din palagiang diligan, kasi kapag na-neglect, nalalanta 🥀.
         </p>
 
         {tulips.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {Object.entries(counts).map(([key, info]) => (
               <span
                 key={key}
@@ -501,6 +633,20 @@ function OurGarden() {
                 {info.label} · {info.count}
               </span>
             ))}
+
+            {needsWaterIds.length > 0 && (
+              <button
+                type="button"
+                onClick={handleWaterAll}
+                disabled={watering}
+                className="inline-flex items-center gap-1.5 rounded-full bg-blush-500 px-3.5 py-1.5 text-xs font-bold text-plum-800 shadow-sm transition hover:bg-blush-400 disabled:opacity-60"
+              >
+                💧{" "}
+                {watering
+                  ? "Nagdidilig..."
+                  : `Diligan Lahat (${needsWaterIds.length})`}
+              </button>
+            )}
           </div>
         )}
       </section>
@@ -516,7 +662,28 @@ function OurGarden() {
             (parehong mag-note ngayong araw) para tumubo yung unang bulaklak. 🌱
           </p>
         ) : (
-          <GardenTree tulips={tulips} activeId={activeId} onToggle={toggle} />
+          <div className="flex flex-col items-center gap-10 sm:flex-row sm:items-start sm:gap-6 sm:overflow-x-auto sm:snap-x sm:snap-mandatory sm:pb-2 sm:-mx-8 sm:px-8">
+            {plots.map((plot, idx) => (
+              <div
+                key={idx}
+                className="w-full max-w-[22rem] sm:w-[24rem] sm:shrink-0 sm:snap-center"
+              >
+                <GardenTree
+                  tulips={plot}
+                  activeId={activeId}
+                  onToggle={toggle}
+                />
+                {plots.length > 1 && (
+                  <p className="mt-2 text-center text-xs text-blush-200/60">
+                    Plot {idx + 1} ng {plots.length}
+                    {idx === plots.length - 1 && plot.length < MAX_PER_TREE
+                      ? ` · ${MAX_PER_TREE - plot.length} pang bulaklak bago mapuno`
+                      : ""}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </section>
     </div>
@@ -524,3 +691,10 @@ function OurGarden() {
 }
 
 export default OurGarden;
+
+/*
+  NOTE for useGarden.js — this file expects a `waterAllTulips(ids)`
+  mutation that waters every id in one batch write (see the paired
+  useGarden.js update — it uses Firestore's writeBatch so all flowers
+  update together in a single request instead of one write per tap).
+*/
