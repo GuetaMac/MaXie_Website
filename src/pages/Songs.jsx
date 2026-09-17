@@ -42,6 +42,13 @@ const songs = [
     for: null,
     note: "Pinili ko \u2019tong song kasi gusto kong ikaw yung taong makakasama ko sa libu-libong buwan na darating. Ikaw yung gusto kong uuwian, palagi.",
   },
+  {
+    audioKey: "siyempre",
+    title: "Syempre",
+    artist: "Willie Revillame",
+    for: null,
+    note: "Inaalay ko ‘tong kanta na ito kasi ikaw yung gusto kong makasama at mahalin habang-buhay.",
+  },
 ];
 
 function formatTime(seconds) {
