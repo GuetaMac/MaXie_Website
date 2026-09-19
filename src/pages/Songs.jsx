@@ -49,6 +49,20 @@ const songs = [
     for: null,
     note: "Inaalay ko ‘tong kanta na ito kasi ikaw yung gusto kong makasama at mahalin habang-buhay.",
   },
+  {
+    audioKey: "star",
+    title: "Star Song",
+    artist: "Rob Deniel",
+    for: null,
+    note: "Pinili ko yung Star Song kasi para sa akin, parang tayo yung dalawang taong nakatadhana sa dami ng bituin, ikaw yung gusto kong makasama.",
+  },
+  {
+    audioKey: "balikat",
+    title: "Balikat at Baywang",
+    artist: "Ian Quizirz",
+    for: null,
+    note: "Pinili ko yung kantang ’to kasi gusto ko yung feeling na kahit saan tayo mapunta, gusto kitang kasama at nasa tabi ko. Ikaw yung gusto kong yakapin, alagaan, at sabayan sa bawat araw.",
+  },
 ];
 
 function formatTime(seconds) {
