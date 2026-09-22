@@ -30,4 +30,11 @@ Hanggang sa naging kagroup kita — yun na yung naging daan para magkaroon tayo 
     photoKey: "official",
     story: `Naging official tayo as mag-jowa hihi, ito ay pagkatapos ng graduation. Tulog pa ako non nang sagutin mo ako. At pinaka-nakakatawa, gumamit ka pa ng ChatGPT para tulungan kang mag-isip ng sasabihin, hahaha.`,
   },
+  {
+    index: "04",
+    label: "Our Laguna day trip",
+    date: null,
+    photoKey: "lagunadate",
+    story: `Ito ang unang date natin sa Laguna — pumunta tayo sa San Pablo Lake at nag-bike habang ineenjoy natin ang oras na magkasama. Sa paghahanap ng burger, napadpad tayo sa isang kainan na medyo nakakagulat ang presyo ang mahal pala HAHAHAHAHAHHA! Pero bawi naman sila sa lasa, sa burger nga lang HAHAHAHH. Ang saya ng araw na 'yan, busog tayo sa pagkain, sa oras, at sa isa't isa. I love you, bb.`,
+  },
 ];
