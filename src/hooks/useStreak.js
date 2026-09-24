@@ -1,4 +1,3 @@
-// hooks/useStreak.js
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
 import {
@@ -20,9 +19,9 @@ export const STREAK_USERS = ["Macky", "Trixie"];
 const STREAK_TULIP_KEY = "olw_streak_tulip_planted_on";
 
 // A single restore fills in at most this many missing days at once —
-// keeps it a "we forgot one day" fix, not a way to bridge a
+// keeps it a "we forgot a few days" fix, not a way to bridge a
 // months-old dead streak back to life.
-const MAX_RESTORE_GAP_DAYS = 3;
+const MAX_RESTORE_GAP_DAYS = 14;
 const MONTHLY_RESTORE_LIMIT = 5;
 
 const STREAK_META_DOC = doc(db, "meta", "streak");
@@ -79,17 +78,29 @@ function computeStreak(notes, restoredDates) {
   const securedToday = hasBoth(todayKey);
   const atRisk = !securedToday && hasBoth(yesterdayKey);
 
+  // `runStart` tracks the earliest date walked in the current active
+  // chain (real or restored), so gap-detection below knows where that
+  // chain begins even when it's brand new (e.g. just today).
+  //
+  // Restored days only bridge the chain so it doesn't break — they
+  // are NOT counted toward `current` themselves. Only real hasBoth
+  // days add to the number, so restoring a missed day reconnects the
+  // streak to its old total instead of tacking on a bonus day for
+  // the gap itself.
   let current = 0;
+  let runStart = null;
   if (securedToday || atRisk) {
     let cursor = securedToday ? new Date() : addDays(new Date(), -1);
     while (hasBoth(toDateKey(cursor))) {
-      current += 1;
+      if (realHasBoth(toDateKey(cursor))) current += 1;
+      runStart = new Date(cursor);
       cursor = addDays(cursor, -1);
     }
   }
 
-  // Longest run counts restored days too — once patched, that gap is
-  // treated as part of real streak history going forward.
+  // Longest run: walk all qualifying days (real + restored) in date
+  // order so restored days keep a chain from breaking, but — same as
+  // `current` — only real days add to the count.
   const qualifyingKeys = new Set(
     Array.from(dayAuthors.keys()).filter(realHasBoth),
   );
@@ -101,18 +112,27 @@ function computeStreak(notes, restoredDates) {
   let prevDate = null;
   for (const key of sortedKeys) {
     const d = fromDateKey(key);
-    run = prevDate && diffDays(prevDate, d) === 1 ? run + 1 : 1;
-    longest = Math.max(longest, run);
+    const continuous = prevDate && diffDays(prevDate, d) === 1;
+    if (!continuous) run = 0;
+    if (realHasBoth(key)) {
+      run += 1;
+      longest = Math.max(longest, run);
+    }
     prevDate = d;
   }
 
-  // If the streak currently reads as broken (not secured today, not
-  // at risk from yesterday), look backward for a short, recent gap
-  // that a restore could bridge — i.e. missing days that sit right
-  // between "now" and an otherwise-qualifying earlier day.
+  // Look backward for an earlier qualifying run that a restore could
+  // bridge into the active streak — even when a fresh run has already
+  // started today/yesterday. The search starts right before that
+  // active run (or from yesterday, if there's no active run at all),
+  // so a same-day restart after a missed gap still surfaces the
+  // banner instead of only offering it while the streak reads 0.
   let gapDates = [];
-  if (!securedToday && !atRisk) {
-    let cursor = addDays(new Date(), -1);
+  {
+    const searchAnchor = runStart
+      ? addDays(runStart, -1)
+      : addDays(new Date(), -1);
+    let cursor = searchAnchor;
     let steps = 0;
     const seen = [];
     while (!hasBoth(toDateKey(cursor)) && steps < MAX_RESTORE_GAP_DAYS) {
@@ -138,8 +158,10 @@ function computeStreak(notes, restoredDates) {
 /**
  * Live streak data derived from the shared "notes" collection, plus
  * a "Restore Streak" feature backed by a small meta/streak doc:
- *  - restoredDates: date keys patched in to bridge a missed day
- *  - restoreUsage: { "YYYY-MM": count } — up to 5 restores/month
+ *  - restoredDates: date keys patched in to bridge a missed gap
+ *  - restoreUsage: { "YYYY-MM": count } — up to 5 restores/month,
+ *    where one restore click uses exactly 1 credit regardless of how
+ *    many days it bridges.
  */
 export function useStreak() {
   const [notes, setNotes] = useState([]);
