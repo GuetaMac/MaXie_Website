@@ -65,6 +65,17 @@ function formatTime(note) {
   }
 }
 
+// RESTORE BANNER — ADD: short, friendly label for a date key like
+// "2026-09-21" -> "Sep 21".
+function formatGapDate(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
 export default function NotesBoard() {
   useGoogleFonts();
 
@@ -351,6 +362,52 @@ export default function NotesBoard() {
             </div>
           )}
         </div>
+
+        {/* RESTORE BANNER — ADD: shows only when a recent, bridgeable
+            gap is detected. Filling it in reconnects `current` back
+            into the earlier run on the next render — no bonus day. */}
+        {streak.gapDates && streak.gapDates.length > 0 && (
+          <div
+            className="rounded-2xl p-4 mb-6 flex items-center gap-3"
+            style={{
+              backgroundColor: "var(--olw-alert-soft)",
+              border: "1px solid var(--olw-alert)",
+            }}
+          >
+            <span className="text-2xl shrink-0">🧊</span>
+            <div className="flex-1 min-w-0">
+              <p className="olw-display text-sm font-semibold leading-tight">
+                Streak broken —{" "}
+                {streak.gapDates.length === 1
+                  ? formatGapDate(streak.gapDates[0])
+                  : `${formatGapDate(streak.gapDates[0])}–${formatGapDate(
+                      streak.gapDates[streak.gapDates.length - 1],
+                    )}`}{" "}
+                missed
+              </p>
+              <p className="text-xs mt-1 opacity-80 leading-snug">
+                {streak.restoresLeft > 0
+                  ? `Restore to pick up right where you left off. ${streak.restoresLeft} restore${
+                      streak.restoresLeft === 1 ? "" : "s"
+                    } left this month.`
+                  : "No restores left this month."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={streak.restoreStreak}
+              disabled={!streak.canRestore}
+              className="olw-btn-name shrink-0 px-4 py-2 rounded-full text-white text-sm font-medium shadow-md"
+              style={{
+                backgroundColor: "var(--olw-alert)",
+                opacity: streak.canRestore ? 1 : 0.5,
+                cursor: streak.canRestore ? "pointer" : "not-allowed",
+              }}
+            >
+              {streak.restoring ? "Restoring..." : "Restore"}
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-center text-sm opacity-60">Loading...</p>
