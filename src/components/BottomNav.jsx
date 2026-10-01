@@ -3,18 +3,19 @@ import { NavLink, useLocation } from "react-router-dom";
 
 // Only the pages someone would jump to constantly live as primary tabs.
 // Everything else (Our Story, Memories, Open When, Mini Games, Our
-// Playlist, Wishlist) sits behind "More" as a slide-up sheet — same
+// Playlist, Wishlist, Garden) sits behind "More" as a slide-up sheet — same
 // pattern most native apps use once they have more destinations than
 // fit comfortably in a tab bar.
 const primaryLinks = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
+  { to: "/feed", label: "Feed", icon: FeedIcon },
   { to: "/notes", label: "Notes", icon: NotesIcon },
   { to: "/calendar", label: "Calendar", icon: CalendarIcon },
-  { to: "/our-garden", label: "Garden", icon: GardenIcon },
   { to: "/chat", label: "Chat", icon: ChatIcon },
 ];
 
 const moreLinks = [
+  { to: "/our-garden", label: "Our Garden" },
   { to: "/our-story", label: "Our Story" },
   { to: "/memories", label: "Memories" },
   { to: "/open-when", label: "Open When..." },
@@ -37,6 +38,24 @@ function HomeIcon(props) {
     >
       <path d="M3 11.5 12 4l9 7.5" />
       <path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4h4v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+
+function FeedIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="M20.5 16l-5-5-8 8.5" />
     </svg>
   );
 }
@@ -71,24 +90,6 @@ function CalendarIcon(props) {
     >
       <rect x="4" y="5.5" width="16" height="15" rx="2" />
       <path d="M8 3.5v4M16 3.5v4M4 10h16" />
-    </svg>
-  );
-}
-
-function GardenIcon(props) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M12 21v-8" />
-      <path d="M12 13c0-4 -3-6-7-6 0 4 3 6 7 6Z" />
-      <path d="M12 13c0-5 3-8 8-8 0 5 -3 8 -8 8Z" />
     </svg>
   );
 }

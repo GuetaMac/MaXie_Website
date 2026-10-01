@@ -12,6 +12,7 @@ import Notes from "./pages/Notes.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
 import OurGarden from "./pages/OurGarden.jsx";
 import Chat from "./pages/Chat.jsx";
+import Feed from "./pages/Feed.jsx";
 import PasscodeGate from "./components/PasscodeGate.jsx";
 import SpecialDaySurprise from "./components/SpecialDaySurprise.jsx";
 import { PetProvider } from "./context/PetContext.jsx";
@@ -38,6 +39,7 @@ function App() {
               <Route path="/our-garden" element={<OurGarden />} />
               <Route path="/our-pet" element={<OurPet />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/feed" element={<Feed />} />
             </Routes>
 
             <p className="text-center font-body text-xs text-plum-400 pt-10 dark:text-blush-200/60">
