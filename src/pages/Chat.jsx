@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { milestones } from "../data/storyMilestones.js";
 
 // How many of the most recent notes to feed the chatbot as context. Notes
@@ -8,12 +8,17 @@ import { milestones } from "../data/storyMilestones.js";
 // want the bot to "remember" further back.
 const MAX_NOTES = 300;
 
+// How many of the most recent Feed posts (plus their comments) to include.
+// Each post costs one extra read for its comments, so keep this modest.
+const MAX_POSTS = 40;
+
 // Starter prompts for the empty state — tappable, so there's no blank-page
 // hesitation the first time you open the tab.
 const SUGGESTIONS = [
   "Paano tayo nagkakilala?",
   "Ano yung favorite memory mo satin?",
   "Gaano na tayo katagal?",
+  "Ano yung huling post natin sa Feed?",
 ];
 
 function buildStoryContext() {
@@ -23,6 +28,19 @@ function buildStoryContext() {
       return `### ${m.label}${dateLabel}\n${m.story}`;
     })
     .join("\n\n");
+}
+
+function formatDateLabel(ts) {
+  if (!ts?.toDate) return "";
+  try {
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(ts.toDate());
+  } catch {
+    return "";
+  }
 }
 
 async function fetchNotesContext() {
@@ -50,6 +68,61 @@ async function fetchNotesContext() {
     .join("\n");
 }
 
+// Feed posts + hearts + comments, oldest -> newest. Text only: the bot can
+// see captions, who posted, when, who hearted, and the comments — not the
+// photos themselves. Wrapped in try/catch so a Feed problem (empty
+// collection, rules, network) never breaks the rest of the chat context.
+async function fetchFeedContext() {
+  try {
+    const q = query(
+      collection(db, "posts"),
+      orderBy("createdAt", "desc"),
+      limit(MAX_POSTS),
+    );
+    const snap = await getDocs(q);
+
+    const posts = await Promise.all(
+      snap.docs.map(async (d) => {
+        const data = d.data();
+        let comments = [];
+        if ((data.commentCount || 0) > 0) {
+          const cs = await getDocs(
+            query(
+              collection(db, "posts", d.id, "comments"),
+              orderBy("createdAt", "asc"),
+            ),
+          );
+          comments = cs.docs.map((c) => c.data());
+        }
+        return { ...data, comments };
+      }),
+    );
+
+    return posts
+      .reverse()
+      .map((p) => {
+        const date = formatDateLabel(p.createdAt);
+        const photoCount = (p.images || []).length;
+        const lines = [
+          `${p.author}${date ? ` [${date}]` : ""} nag-post${
+            photoCount > 0 ? ` (may ${photoCount} litrato)` : ""
+          }: ${p.text || "(walang caption)"}`,
+        ];
+        if (p.hearts?.length) {
+          lines.push(`  Na-heart ni: ${p.hearts.join(", ")}`);
+        }
+        p.comments.forEach((c) => {
+          lines.push(`  Comment ni ${c.author}: ${c.text}`);
+        });
+        return lines.join("\n");
+      })
+      .join("\n\n");
+  } catch (err) {
+    console.error("Failed to load feed context:", err);
+    return "";
+  }
+}
+
 function HeartIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -74,12 +147,18 @@ export default function Chat() {
 
     async function loadContext() {
       try {
-        const [storyText, notesText] = await Promise.all([
+        const [storyText, notesText, feedText] = await Promise.all([
           Promise.resolve(buildStoryContext()),
           fetchNotesContext(),
+          fetchFeedContext(),
         ]);
         if (cancelled) return;
-        const combined = `## Our Story (milestones)\n\n${storyText}\n\n## Our Notes (chronological messages to each other)\n\n${notesText}`;
+
+        const feedSection = feedText
+          ? `\n\n## Our Feed (mga post nila: caption, hearts, at comments)\n\n${feedText}`
+          : "";
+
+        const combined = `## Our Story (milestones)\n\n${storyText}\n\n## Our Notes (chronological messages to each other)\n\n${notesText}${feedSection}`;
         setContext(combined);
       } catch (err) {
         console.error("Failed to build chat context:", err);
@@ -192,8 +271,8 @@ export default function Chat() {
         <span className="page-eyebrow text-sm tracking-[0.3em]">Ask Us</span>
         <h1 className="mt-2 text-3xl sm:text-5xl">Ask About Us</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-plum-400 sm:mx-0 sm:mt-3 sm:text-lg dark:text-blush-200/80">
-          Magtanong tungkol sa relasyon natin — batay sa Our Story at sa mga
-          notes natin sa isa't isa.
+          Magtanong tungkol sa relasyon natin — batay sa Our Story, sa mga notes
+          natin sa isa't isa, at sa mga post natin sa Feed.
         </p>
       </div>
 
