@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { db } from "../firebase";
 import {
@@ -79,6 +79,23 @@ function formatTime(item) {
     return `${date}, ${time}`;
   } catch {
     return "";
+  }
+}
+
+// Scrolls the window AND any scrollable parent (in case the app layout
+// scrolls inside a container instead of the page itself).
+function scrollEverythingToTop(startEl) {
+  try {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    let el = startEl?.parentElement;
+    while (el) {
+      if (el.scrollTop > 0) el.scrollTop = 0;
+      el = el.parentElement;
+    }
+  } catch {
+    /* ignore */
   }
 }
 
@@ -452,9 +469,112 @@ function ImageCarousel({ images }) {
 
 /* ---------- comments ---------- */
 
+// One comment (or reply). Replies are one level deep: replying to a reply
+// attaches to the same top-level comment and mentions who you replied to.
+function CommentItem({
+  c,
+  postId,
+  username,
+  isReply,
+  parentAuthor,
+  onReply,
+  onDelete,
+}) {
+  const [popping, setPopping] = useState(false);
+  const hearts = c.hearts || [];
+  const liked = hearts.includes(username);
+
+  const toggleHeart = async () => {
+    try {
+      await updateDoc(doc(db, "posts", postId, "comments", c.id), {
+        hearts: liked ? arrayRemove(username) : arrayUnion(username),
+      });
+      if (!liked) {
+        setPopping(true);
+        setTimeout(() => setPopping(false), 450);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const showMention =
+    isReply && c.replyToName && c.replyToName !== parentAuthor;
+
+  return (
+    <div className="flex gap-2.5 text-sm leading-snug">
+      <Avatar name={c.author} size={isReply ? 24 : 28} />
+      <div className="flex-1 min-w-0">
+        <div
+          className="rounded-2xl px-3.5 py-2"
+          style={{ backgroundColor: "var(--olw-chip-bg)" }}
+        >
+          <span
+            className="olw-script text-lg leading-none"
+            style={{ color: "var(--olw-rose)" }}
+          >
+            {c.author}
+          </span>
+          <p className="mt-0.5 break-words whitespace-pre-wrap">
+            {showMention && (
+              <span
+                className="font-medium mr-1"
+                style={{ color: "var(--olw-rose)" }}
+              >
+                @{c.replyToName}
+              </span>
+            )}
+            {c.text}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 mt-1 ml-3 text-[11px] opacity-60">
+          <span>{formatTime(c)}</span>
+          <button type="button" onClick={onReply} className="olw-link-btn">
+            Reply
+          </button>
+          {c.author === username && (
+            <button type="button" onClick={onDelete} className="olw-link-btn">
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={toggleHeart}
+        aria-pressed={liked}
+        aria-label={liked ? "Remove heart from comment" : "Heart this comment"}
+        className="olw-comment-heart"
+        style={{ color: liked ? "var(--olw-rose)" : "inherit" }}
+      >
+        <HeartIcon
+          filled={liked}
+          size={16}
+          className={popping ? "olw-heart-pop" : ""}
+        />
+        <span style={{ opacity: hearts.length > 0 ? 1 : 0 }}>
+          {hearts.length || 0}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 function Comments({ postId, username, items }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyTo, setReplyTo] = useState(null); // { id: topLevelId, author }
+  const inputRef = useRef(null);
+
+  const ids = new Set(items.map((c) => c.id));
+  // A reply whose parent is gone is shown as a normal comment.
+  const topLevel = items.filter((c) => !c.parentId || !ids.has(c.parentId));
+  const repliesOf = (id) => items.filter((c) => c.parentId === id);
+
+  const startReply = (c, topLevelId) => {
+    setReplyTo({ id: topLevelId, author: c.author });
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
 
   const send = async (e) => {
     e.preventDefault();
@@ -468,10 +588,14 @@ function Comments({ postId, username, items }) {
         text: t,
         author: username,
         createdAt: serverTimestamp(),
+        hearts: [],
+        parentId: replyTo ? replyTo.id : null,
+        replyToName: replyTo ? replyTo.author : null,
       });
       batch.update(doc(db, "posts", postId), { commentCount: increment(1) });
       await batch.commit();
       setText("");
+      setReplyTo(null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -479,12 +603,24 @@ function Comments({ postId, username, items }) {
     }
   };
 
-  const remove = async (commentId) => {
+  // Deleting a top-level comment also deletes its replies.
+  const remove = async (c, replies = []) => {
     try {
       const batch = writeBatch(db);
-      batch.delete(doc(db, "posts", postId, "comments", commentId));
-      batch.update(doc(db, "posts", postId), { commentCount: increment(-1) });
+      batch.delete(doc(db, "posts", postId, "comments", c.id));
+      replies.forEach((r) =>
+        batch.delete(doc(db, "posts", postId, "comments", r.id)),
+      );
+      batch.update(doc(db, "posts", postId), {
+        commentCount: increment(-(1 + replies.length)),
+      });
       await batch.commit();
+      if (
+        replyTo &&
+        (replyTo.id === c.id || replies.some((r) => r.id === replyTo.id))
+      ) {
+        setReplyTo(null);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -501,46 +637,69 @@ function Comments({ postId, username, items }) {
         </p>
       ) : (
         <ul className="space-y-3 mb-3">
-          {items.map((c) => (
-            <li key={c.id} className="flex gap-2.5 text-sm leading-snug">
-              <Avatar name={c.author} size={28} />
-              <div
-                className="flex-1 min-w-0 rounded-2xl px-3.5 py-2"
-                style={{ backgroundColor: "var(--olw-chip-bg)" }}
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span
-                    className="olw-script text-lg leading-none"
-                    style={{ color: "var(--olw-rose)" }}
-                  >
-                    {c.author}
-                  </span>
-                  <span className="text-[11px] opacity-50 shrink-0">
-                    {formatTime(c)}
-                    {c.author === username && (
-                      <button
-                        type="button"
-                        onClick={() => remove(c.id)}
-                        className="olw-link-btn ml-2"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </span>
-                </div>
-                <p className="mt-0.5 break-words">{c.text}</p>
-              </div>
-            </li>
-          ))}
+          {topLevel.map((c) => {
+            const replies = repliesOf(c.id);
+            return (
+              <li key={c.id}>
+                <CommentItem
+                  c={c}
+                  postId={postId}
+                  username={username}
+                  onReply={() => startReply(c, c.id)}
+                  onDelete={() => remove(c, replies)}
+                />
+                {replies.length > 0 && (
+                  <div className="olw-replies mt-2 space-y-2.5">
+                    {replies.map((r) => (
+                      <CommentItem
+                        key={r.id}
+                        c={r}
+                        postId={postId}
+                        username={username}
+                        isReply
+                        parentAuthor={c.author}
+                        onReply={() => startReply(r, c.id)}
+                        onDelete={() => remove(r)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
+      )}
+
+      {replyTo && (
+        <div
+          className="flex items-center justify-between gap-2 text-xs rounded-xl px-3 py-1.5 mb-2"
+          style={{ backgroundColor: "var(--olw-rose-soft)" }}
+        >
+          <span className="truncate">
+            Replying to{" "}
+            <b style={{ color: "var(--olw-rose)" }}>{replyTo.author}</b>
+          </span>
+          <button
+            type="button"
+            onClick={() => setReplyTo(null)}
+            aria-label="Cancel reply"
+            className="olw-icon-btn"
+            style={{ width: 22, height: 22 }}
+          >
+            <CloseIcon size={12} />
+          </button>
+        </div>
       )}
 
       <form onSubmit={send} className="flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Add a comment..."
+          placeholder={
+            replyTo ? `Reply to ${replyTo.author}...` : "Add a comment..."
+          }
           className="olw-input flex-1 min-w-0 rounded-2xl px-4 py-2.5 text-sm border-b-2"
           style={{
             borderColor: "var(--olw-rose-soft)",
@@ -974,6 +1133,28 @@ export default function Feed() {
   const [limitCount, setLimitCount] = useState(PAGE_SIZE);
   const [composerOpen, setComposerOpen] = useState(false);
 
+  const rootRef = useRef(null);
+  const didInitialScroll = useRef(false);
+
+  // Always start at the top when the feed opens. We do it right on mount,
+  // and once more after the first posts load, since the browser (or router)
+  // may restore an old scroll position once the page gets tall.
+  useLayoutEffect(() => {
+    if (typeof history !== "undefined" && "scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+    scrollEverythingToTop(rootRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (loading || didInitialScroll.current) return;
+    didInitialScroll.current = true;
+    const id = requestAnimationFrame(() => {
+      scrollEverythingToTop(rootRef.current);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loading]);
+
   useEffect(() => {
     const q = query(
       collection(db, "posts"),
@@ -1194,6 +1375,26 @@ export default function Feed() {
         text-underline-offset: 2px;
       }
 
+      /* ----- comment hearts + replies ----- */
+      .olw-comment-heart {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        flex-shrink: 0;
+        padding: 6px 2px 0;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+      .olw-comment-heart:hover { transform: scale(1.12); }
+      .olw-replies {
+        margin-left: 1.1rem;
+        padding-left: 0.75rem;
+        border-left: 2px solid var(--olw-rose-soft);
+      }
+
       .olw-btn-name, .olw-send-btn {
         transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
       }
@@ -1204,6 +1405,7 @@ export default function Feed() {
       .olw-action:focus-visible,
       .olw-link-btn:focus-visible,
       .olw-icon-btn:focus-visible,
+      .olw-comment-heart:focus-visible,
       .olw-fab:focus-visible,
       .olw-arrow:focus-visible,
       .olw-slide-btn:focus-visible,
@@ -1371,7 +1573,10 @@ export default function Feed() {
 
   if (!username) {
     return (
-      <div className="olw-root flex items-center justify-center p-6">
+      <div
+        ref={rootRef}
+        className="olw-root flex items-center justify-center p-6"
+      >
         {styleBlock}
         <div
           className="max-w-sm w-full text-center backdrop-blur rounded-3xl p-8 shadow-sm"
@@ -1413,7 +1618,7 @@ export default function Feed() {
   const hasMore = posts.length >= limitCount;
 
   return (
-    <div className="olw-root px-4 py-8">
+    <div ref={rootRef} className="olw-root px-4 py-8">
       {styleBlock}
       <div className="max-w-md mx-auto pb-28">
         <div className="text-center mb-8">
