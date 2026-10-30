@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { usePet } from "../context/PetContext.jsx";
-import PetAvatar from "../components/PetAvatar.jsx";
+import petSounds from "../utils/petSounds.js";
+
+// Lazy-load para hindi mabigat ang ibang pages (three.js ay malaki)
+const PetAvatar = lazy(() => import("../components/PetAvatar.jsx"));
 
 const STAT_META = {
   happiness: { label: "Happy", emoji: "❤️", color: "bg-rose-400" },
@@ -26,6 +29,25 @@ const EMOJI_TO_KEY = {
   "💤": "sleep",
   "🛁": "bath",
   "🎁": "gift",
+};
+
+// Gaano katagal tumatakbo ang animation ng bawat action (ms)
+const ACTION_MS = {
+  feed: 3400,
+  play: 3000,
+  pet: 1800,
+  sleep: 7000,
+  bath: 3600,
+  gift: 3200,
+};
+
+const ACTION_LINE = {
+  feed: (n) => `Nom nom nom… ${n} is enjoying the meal 🍖`,
+  play: (n) => `Wheee! ${n} loves playing 🧸`,
+  pet: (n) => `Pip pip! ${n} loves your pets 🥰`,
+  sleep: (n) => `Zzz… ${n} is sleeping. Tap to wake up 💤`,
+  bath: (n) => `Bubbles! ${n} is taking a bath 🫧`,
+  gift: (n) => `Ooh! A gift for ${n} 🎁`,
 };
 
 const ACCESSORY_LABEL = { bow: "Bow", scarf: "Scarf", crown: "Crown" };
@@ -56,7 +78,9 @@ function StatRibbon({ statKey, value }) {
 function WhoAmIPicker({ partners, onChoose }) {
   return (
     <div className="rounded-2xl border border-dashed border-plum-200 bg-blush-50 p-6 text-center dark:border-plum-700 dark:bg-plum-900/40">
-      <p className="mb-4 text-plum-600 dark:text-blush-100">Sino ka ngayon?</p>
+      <p className="mb-4 text-plum-600 dark:text-blush-100">
+        Who are you right now?
+      </p>
       <div className="flex justify-center gap-3">
         {partners.map((partnerName) => (
           <button
@@ -90,8 +114,8 @@ function dayLabel(ts) {
     a.getDate() === b.getDate() &&
     a.getMonth() === b.getMonth() &&
     a.getFullYear() === b.getFullYear();
-  if (sameDay(d, today)) return "Ngayon";
-  if (sameDay(d, yesterday)) return "Kahapon";
+  if (sameDay(d, today)) return "Today";
+  if (sameDay(d, yesterday)) return "Yesterday";
   return d.toLocaleDateString("en-PH", { month: "short", day: "numeric" });
 }
 
@@ -118,26 +142,21 @@ function groupLogByDay(log) {
 function greeting(whoAmI) {
   const hour = new Date().getHours();
   const time =
-    hour < 12
-      ? "Magandang umaga"
-      : hour < 18
-        ? "Magandang hapon"
-        : "Magandang gabi";
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   return whoAmI ? `${time}, ${whoAmI} 💗` : time;
 }
 
 function moodMessage(stats, petName) {
   const { happiness, hunger, energy, clean, bond } = stats;
-  if (energy < 25)
-    return `Antok na antok na si ${petName}, pahinga muna siya 😴`;
-  if (hunger < 30) return `Gutom na si ${petName}, feeding time na 🥺`;
-  if (clean < 30) return `Kailangan na ni ${petName} ng bath 🫧`;
+  if (energy < 25) return `${petName} is super sleepy and needs a rest 😴`;
+  if (hunger < 30) return `${petName} is hungry, time to feed 🥺`;
+  if (clean < 30) return `${petName} needs a bath 🫧`;
   const avg = (happiness + energy + hunger + clean) / 4;
   if (avg > 75)
-    return `Sobrang saya ni ${petName} ngayon! Salamat sa pag-aalaga 🥰`;
-  if (avg > 50) return `Okay lang ang pakiramdam ni ${petName} ngayon.`;
-  if (bond > 80) return `Sobrang bonded na kayo ni ${petName}! ✨`;
-  return `Medyo kailangan ng konting pansin si ${petName}.`;
+    return `${petName} is so happy right now! Thanks for taking care of them 🥰`;
+  if (avg > 50) return `${petName} is feeling okay right now.`;
+  if (bond > 80) return `You and ${petName} are super bonded! ✨`;
+  return `${petName} could use a little attention.`;
 }
 
 const GIFTS = [
@@ -147,14 +166,21 @@ const GIFTS = [
   "a slice of mango",
 ];
 
-function ActionButton({ emoji, label, onClick, disabled }) {
+function ActionButton({ emoji, label, onClick, disabled, active }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center gap-1 rounded-2xl border border-blush-200 py-4 text-plum-600 shadow-sm transition-all duration-150 hover:bg-blush-50 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 dark:border-plum-700 dark:text-blush-100 dark:hover:bg-plum-900/40"
+      aria-pressed={!!active}
+      className={`flex flex-col items-center gap-1 rounded-2xl border py-4 text-plum-600 shadow-sm transition-all duration-150 hover:bg-blush-50 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 dark:text-blush-100 dark:hover:bg-plum-900/40 ${
+        active
+          ? "border-plum-300 bg-blush-50 ring-2 ring-plum-300/60 dark:border-plum-500 dark:bg-plum-900/60"
+          : "border-blush-200 dark:border-plum-700"
+      }`}
     >
-      <span className="text-2xl">{emoji}</span>
+      <span className={`text-2xl ${active ? "animate-bounce" : ""}`}>
+        {emoji}
+      </span>
       <span className="text-xs">{label}</span>
     </button>
   );
@@ -181,19 +207,23 @@ export default function OurPet() {
 
   const [showGifts, setShowGifts] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
+  const [actionId, setActionId] = useState(0);
   const [celebration, setCelebration] = useState(null);
   const [visibleCount, setVisibleCount] = useState(6);
   const [filterActor, setFilterActor] = useState("all");
+  const [muted, setMuted] = useState(petSounds.isMuted());
   const prevBond = useRef(stats.bond);
   const prevAccessory = useRef(accessory);
+  const actionTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(actionTimer.current), []);
 
   useEffect(() => {
     const prevTier = Math.floor(prevBond.current / 10);
     const currentTier = Math.floor(stats.bond / 10);
     if (currentTier > prevTier) {
-      setCelebration(
-        `Tumaas ang Bond ninyo ni ${name}! Ngayon ay ${stats.bond}% na 🎉`,
-      );
+      setCelebration(`Your bond with ${name} grew! It's now ${stats.bond}% 🎉`);
+      petSounds.sparkle();
       const timeout = setTimeout(() => setCelebration(null), 3200);
       prevBond.current = stats.bond;
       return () => clearTimeout(timeout);
@@ -204,8 +234,9 @@ export default function OurPet() {
   useEffect(() => {
     if (accessory !== "none" && accessory !== prevAccessory.current) {
       setCelebration(
-        `Nabuksan ang bagong accessory: ${ACCESSORY_LABEL[accessory]}! 🎁`,
+        `New accessory unlocked: ${ACCESSORY_LABEL[accessory]}! 🎁`,
       );
+      petSounds.sparkle();
       const timeout = setTimeout(() => setCelebration(null), 3200);
       prevAccessory.current = accessory;
       return () => clearTimeout(timeout);
@@ -213,12 +244,24 @@ export default function OurPet() {
     prevAccessory.current = accessory;
   }, [accessory]);
 
+  // Simulan ang animation + sound ng isang action.
+  // Isang timer lang para hindi mapatay ng lumang timeout ang bagong action.
+  const startAction = (key) => {
+    clearTimeout(actionTimer.current);
+    setActiveAction(key);
+    setActionId((n) => n + 1);
+    if (navigator.vibrate) navigator.vibrate(12);
+    actionTimer.current = setTimeout(
+      () => setActiveAction(null),
+      ACTION_MS[key] ?? 2000,
+    );
+  };
+
   const trigger =
     (key, fn) =>
     (...args) => {
       fn(...args);
-      setActiveAction(key);
-      setTimeout(() => setActiveAction(null), 1600);
+      startAction(key);
     };
 
   const handleFeed = trigger("feed", feed);
@@ -228,12 +271,26 @@ export default function OurPet() {
   const handleBath = trigger("bath", bath);
   const handleGift = trigger("gift", giveGift);
 
+  const wake = () => {
+    clearTimeout(actionTimer.current);
+    setActiveAction(null);
+    setActionId((n) => n + 1);
+  };
+
   const replayEntry = (entry) => {
     const key = entry.actionKey || EMOJI_TO_KEY[entry.emoji];
     if (!key) return;
-    setActiveAction(key);
-    setTimeout(() => setActiveAction(null), 1600);
+    startAction(key);
   };
+
+  const toggleMute = () => {
+    const next = !muted;
+    petSounds.setMuted(next);
+    setMuted(next);
+    if (!next) petSounds.poke();
+  };
+
+  const isSleeping = activeAction === "sleep";
 
   const lowStat = Object.entries(stats).find(
     ([key, val]) => key !== "bond" && val < 30,
@@ -249,7 +306,7 @@ export default function OurPet() {
     filterActor === "all" ? log : log.filter((e) => e.actor === filterActor);
   const groupedLog = groupLogByDay(filteredLog.slice(0, visibleCount));
 
-  const todayEntries = log.filter((e) => dayLabel(e.timestamp) === "Ngayon");
+  const todayEntries = log.filter((e) => dayLabel(e.timestamp) === "Today");
   const todaySummary = Object.keys(ACTION_META)
     .map((key) => ({
       key,
@@ -258,6 +315,10 @@ export default function OurPet() {
       ).length,
     }))
     .filter((s) => s.count > 0);
+
+  const statusLine = activeAction
+    ? ACTION_LINE[activeAction](name)
+    : moodMessage(stats, name);
 
   return (
     <div className="mx-auto max-w-md space-y-6">
@@ -274,7 +335,7 @@ export default function OurPet() {
         <div className="mt-1 flex items-center justify-center gap-3">
           {streak > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-600 dark:bg-orange-950/40 dark:text-orange-300">
-              🔥 {streak} {streak === 1 ? "araw" : "araw"} streak
+              🔥 {streak} day streak
             </span>
           )}
           {whoAmI && (
@@ -282,7 +343,7 @@ export default function OurPet() {
               onClick={() => chooseWhoAmI(null)}
               className="text-xs text-plum-300 underline decoration-dotted hover:text-plum-500 dark:text-blush-200/50 dark:hover:text-blush-100"
             >
-              hindi ikaw si {whoAmI}?
+              not {whoAmI}?
             </button>
           )}
         </div>
@@ -296,22 +357,54 @@ export default function OurPet() {
         </div>
       )}
 
-      <div className="rounded-3xl bg-gradient-to-b from-sky-50 to-pink-50 shadow-sm dark:from-plum-900/60 dark:to-plum-900/30">
-        <PetAvatar
-          stats={stats}
-          action={activeAction}
-          onTap={whoAmI ? handlePet : undefined}
-          accessory={accessory}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-sky-50 to-pink-50 shadow-sm dark:from-plum-900/60 dark:to-plum-900/30">
+        {/* night overlay kapag natutulog */}
+        <div
+          className={`pointer-events-none absolute inset-0 z-10 bg-indigo-900/30 transition-opacity duration-1000 ${
+            isSleeping ? "opacity-100" : "opacity-0"
+          }`}
         />
-        <p className="px-6 pb-5 text-center text-sm text-plum-500 dark:text-blush-200/80">
-          {moodMessage(stats, name)}
+
+        <button
+          onClick={toggleMute}
+          aria-label={muted ? "Turn sounds on" : "Turn sounds off"}
+          className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-base shadow-sm backdrop-blur transition hover:bg-white active:scale-90 dark:bg-plum-800/70 dark:hover:bg-plum-800"
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
+
+        <Suspense
+          fallback={
+            <div className="flex h-80 items-center justify-center text-sm text-plum-400 dark:text-blush-200/70">
+              Waking up {name}…
+            </div>
+          }
+        >
+          <PetAvatar
+            stats={stats}
+            action={activeAction}
+            actionId={actionId}
+            onTap={whoAmI ? (isSleeping ? wake : handlePet) : undefined}
+            accessory={accessory}
+          />
+        </Suspense>
+
+        <p
+          className={`relative z-20 px-6 pb-5 text-center text-sm transition-colors duration-700 ${
+            isSleeping
+              ? "text-indigo-700 dark:text-indigo-200"
+              : "text-plum-500 dark:text-blush-200/80"
+          }`}
+          aria-live="polite"
+        >
+          {statusLine}
         </p>
       </div>
 
       {lowStat && whoAmI && (
         <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30">
           <span className="text-sm text-amber-700 dark:text-amber-200">
-            Kailangan ni {name} ng konting pansin sa{" "}
+            {name} needs a little attention on{" "}
             {STAT_META[lowStat[0]].label.toLowerCase()} 🥺
           </span>
           <button
@@ -335,43 +428,49 @@ export default function OurPet() {
           label="Feed"
           onClick={handleFeed}
           disabled={!whoAmI}
+          active={activeAction === "feed"}
         />
         <ActionButton
           emoji="🧸"
           label="Play"
           onClick={handlePlay}
           disabled={!whoAmI}
+          active={activeAction === "play"}
         />
         <ActionButton
           emoji="🫳"
           label="Pet"
           onClick={handlePet}
           disabled={!whoAmI}
+          active={activeAction === "pet"}
         />
         <ActionButton
           emoji="💤"
           label="Sleep"
           onClick={handleSleep}
           disabled={!whoAmI}
+          active={activeAction === "sleep"}
         />
         <ActionButton
           emoji="🛁"
           label="Bath"
           onClick={handleBath}
           disabled={!whoAmI}
+          active={activeAction === "bath"}
         />
         <ActionButton
           emoji="🎁"
           label="Gift"
           onClick={() => setShowGifts(true)}
           disabled={!whoAmI}
+          active={activeAction === "gift"}
         />
       </div>
 
       {showGifts && (
         <div className="rounded-2xl border border-blush-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-plum-700 dark:bg-plum-900/40">
           <p className="mb-3 text-sm text-plum-600 dark:text-blush-100">
-            Piliin ang gift:
+            Pick a gift:
           </p>
           <div className="flex flex-wrap gap-2">
             {GIFTS.map((item) => (
@@ -397,7 +496,7 @@ export default function OurPet() {
           </h2>
           {log.length > 0 && (
             <span className="text-xs text-plum-300 dark:text-blush-200/40">
-              {Math.min(visibleCount, filteredLog.length)} sa{" "}
+              {Math.min(visibleCount, filteredLog.length)} of{" "}
               {filteredLog.length}
             </span>
           )}
@@ -406,7 +505,7 @@ export default function OurPet() {
         {todaySummary.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2 rounded-2xl bg-blush-50 px-3 py-2.5 dark:bg-plum-900/40">
             <span className="text-xs text-plum-400 dark:text-blush-200/60">
-              Ngayon:
+              Today:
             </span>
             {todaySummary.map((s) => (
               <span
@@ -433,14 +532,14 @@ export default function OurPet() {
                   : "bg-blush-100 text-plum-500 hover:bg-blush-200 dark:bg-plum-800 dark:text-blush-200"
               }`}
             >
-              {p === "all" ? "Lahat" : p}
+              {p === "all" ? "All" : p}
             </button>
           ))}
         </div>
 
         {filteredLog.length === 0 && (
           <p className="text-sm text-plum-400 dark:text-blush-200/60">
-            Wala pang activity dito — mag-feed o maglaro para magsimula.
+            No activity yet — feed or play to get started.
           </p>
         )}
 
@@ -499,7 +598,7 @@ export default function OurPet() {
             onClick={() => setVisibleCount((v) => v + 6)}
             className="mt-4 w-full rounded-2xl border border-dashed border-blush-200 py-2.5 text-sm text-plum-500 transition hover:bg-blush-50 active:scale-[0.98] dark:border-plum-700 dark:text-blush-200/80 dark:hover:bg-plum-900/40"
           >
-            Ipakita pa ({filteredLog.length - visibleCount} pa)
+            Show more ({filteredLog.length - visibleCount} left)
           </button>
         )}
 
@@ -510,7 +609,7 @@ export default function OurPet() {
               onClick={() => setVisibleCount(6)}
               className="mt-4 w-full rounded-2xl border border-dashed border-blush-200 py-2.5 text-sm text-plum-400 transition hover:bg-blush-50 active:scale-[0.98] dark:border-plum-700 dark:text-blush-200/60 dark:hover:bg-plum-900/40"
             >
-              Ipakita nang kaunti lang
+              Show less
             </button>
           )}
       </div>
