@@ -153,7 +153,7 @@ function moodMessage(stats, petName) {
   if (clean < 30) return `${petName} needs a bath 🫧`;
   const avg = (happiness + energy + hunger + clean) / 4;
   if (avg > 75)
-    return `${petName} is so happy right now! Thanks for taking care of them 🥰`;
+    return `${petName} is so happy right now! Thanks for taking care of her 🥰`;
   if (avg > 50) return `${petName} is feeling okay right now.`;
   if (bond > 80) return `You and ${petName} are super bonded! ✨`;
   return `${petName} could use a little attention.`;
